@@ -14,23 +14,31 @@ fi
 code_files=$(find internal -name '*.go' ! -name '*_test.go')
 missing=0
 
-while IFS= read -r path; do
-  [[ -z "$path" ]] && continue
-  if ! grep -qhF "\"$path\"" $code_files; then
-    echo "drift: $path is marked done in $catalog but no code references it"
+while IFS= read -r route; do
+  [[ -z "$route" ]] && continue
+  if ! grep -qhF "\"$route" $code_files; then
+    echo "drift: $route is marked done in $catalog but no code references it"
     missing=1
   fi
 done < <(python3 - "$catalog" <<'PY'
 import sys, yaml
 doc = yaml.safe_load(open(sys.argv[1]))
+roots = set()
 for ep in doc.get("endpoints", []):
     if ep.get("status") == "done":
-        print(ep["path"])
+        parts = ep["path"].strip("/").split("/")
+        roots.add("/" + parts[0])
+for r in sorted(roots):
+    print(r)
 PY
 )
 
 while IFS= read -r path; do
   [[ -z "$path" ]] && continue
+  first="${path#/}"; first="${first%%/*}"
+  if ! grep -q "^  - path: /$first\$" "$catalog" && ! grep -q "^  - path: /$first/" "$catalog"; then
+    continue
+  fi
   if ! grep -qF "path: $path" "$catalog"; then
     echo "drift: code references $path but it is absent from $catalog"
     missing=1

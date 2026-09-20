@@ -14,15 +14,16 @@ import (
 )
 
 var (
-	cfgFile   string
-	jsonMode  bool
-	pretty    bool
-	readOnly  bool
-	dryRun    bool
-	confirm   bool
-	timeout   time.Duration
-	profile   string
-	requestID string
+	cfgFile    string
+	jsonMode   bool
+	pretty     bool
+	fullOutput bool
+	readOnly   bool
+	dryRun     bool
+	confirm    bool
+	timeout    time.Duration
+	profile    string
+	requestID  string
 )
 
 var RootCmd = &cobra.Command{
@@ -49,6 +50,7 @@ scripts, and local agents.`,
 
 		jsonMode = jsonMode || envBool("QUALTRICS_JSON")
 		pretty = pretty || envBool("QUALTRICS_PRETTY")
+		fullOutput = fullOutput || envBool("QUALTRICS_FULL")
 		readOnly = readOnly || envBool("QUALTRICS_READ_ONLY")
 		dryRun = dryRun || envBool("QUALTRICS_DRY_RUN")
 		confirm = confirm || envBool("QUALTRICS_CONFIRM")
@@ -91,6 +93,7 @@ func init() {
 	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is ~/.config/qualtrics-cli/config.yaml)")
 	RootCmd.PersistentFlags().BoolVar(&jsonMode, "json", false, "emit machine-readable JSON")
 	RootCmd.PersistentFlags().BoolVar(&pretty, "pretty", false, "pretty-print JSON output")
+	RootCmd.PersistentFlags().BoolVar(&fullOutput, "full", false, "print full payloads instead of summaries")
 	RootCmd.PersistentFlags().BoolVar(&readOnly, "read-only", false, "block remote writes")
 	RootCmd.PersistentFlags().BoolVar(&dryRun, "dry-run", false, "preview a remote write without executing it")
 	RootCmd.PersistentFlags().BoolVar(&confirm, "confirm", false, "explicitly execute a remote write")
@@ -102,4 +105,6 @@ func init() {
 	RootCmd.AddCommand(authCmd)
 	RootCmd.AddCommand(rawCmd)
 	RootCmd.AddCommand(completionCmd)
+	RootCmd.AddCommand(surveysCmd)
+	RootCmd.AddCommand(definitionsCmd)
 }

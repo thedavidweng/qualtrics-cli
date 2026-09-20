@@ -21,3 +21,15 @@ All notable changes to this project are documented in this file. The format is b
   `completion`, `raw`.
 - Endpoint catalog (`docs/endpoints.yaml`) with CI drift check, ADRs 0001–0006,
   `CONTEXT.md` glossary.
+
+## [Unreleased] — survey platform core
+
+### Added
+
+- `surveys list|show|create|delete` with `--limit/--offset/--all`, edit and preview
+  links in `surveys show`, and typed-ID confirmation for delete.
+- `definitions show|export|import` plus granular `questions`, `blocks`, `flow`, and
+  `options` CRUD; payloads read from `-f <file>` (`-` for stdin).
+- `runList` runner populating `meta.pagination{limit,offset,total,has_more}`.
+- Transport-stub contract tests pinning request paths, methods, query strings, and
+  bodies for every new endpoint (18 catalog entries now `done`).

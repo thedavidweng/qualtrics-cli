@@ -23,112 +23,112 @@ endpoints:
     command: surveys show
     tier: read
     pagination: none
-    status: planned
+    status: done
 
   - path: /survey-definitions
     method: POST
     command: surveys create / definitions import
     tier: mutation
     pagination: none
-    status: planned
+    status: done
 
   - path: /survey-definitions/{surveyId}
     method: GET
     command: definitions show / definitions export
     tier: read
     pagination: none
-    status: planned
+    status: done
 
   - path: /survey-definitions/{surveyId}
     method: DELETE
     command: surveys delete
     tier: destructive
     pagination: none
-    status: planned
+    status: done
 
   - path: /survey-definitions/{surveyId}/questions
     method: GET
     command: definitions questions list
     tier: read
     pagination: none
-    status: planned
+    status: done
 
   - path: /survey-definitions/{surveyId}/questions
     method: POST
     command: definitions questions create
     tier: mutation
     pagination: none
-    status: planned
+    status: done
 
   - path: /survey-definitions/{surveyId}/questions/{questionId}
     method: PUT
     command: definitions questions update
     tier: mutation
     pagination: none
-    status: planned
+    status: done
 
   - path: /survey-definitions/{surveyId}/questions/{questionId}
     method: DELETE
     command: definitions questions delete
     tier: destructive
     pagination: none
-    status: planned
+    status: done
 
   - path: /survey-definitions/{surveyId}/blocks
     method: POST
     command: definitions blocks create
     tier: mutation
     pagination: none
-    status: planned
+    status: done
 
   - path: /survey-definitions/{surveyId}/blocks/{blockId}
     method: GET
     command: definitions blocks show
     tier: read
     pagination: none
-    status: planned
+    status: done
 
   - path: /survey-definitions/{surveyId}/blocks/{blockId}
     method: PUT
     command: definitions blocks update
     tier: mutation
     pagination: none
-    status: planned
+    status: done
 
   - path: /survey-definitions/{surveyId}/blocks/{blockId}
     method: DELETE
     command: definitions blocks delete
     tier: destructive
     pagination: none
-    status: planned
+    status: done
 
   - path: /survey-definitions/{surveyId}/flow
     method: GET
     command: definitions flow show
     tier: read
     pagination: none
-    status: planned
+    status: done
 
   - path: /survey-definitions/{surveyId}/flow
     method: PUT
     command: definitions flow update
     tier: mutation
     pagination: none
-    status: planned
+    status: done
 
   - path: /survey-definitions/{surveyId}/options
     method: GET
     command: definitions options show
     tier: read
     pagination: none
-    status: planned
+    status: done
 
   - path: /survey-definitions/{surveyId}/options
     method: PUT
     command: definitions options update
     tier: mutation
     pagination: none
-    status: planned
+    status: done
 
   - path: /responseexports
     method: POST

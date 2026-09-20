@@ -15,6 +15,7 @@ matches the command tree.
 | `--timeout` | `QUALTRICS_TIMEOUT` | per-request timeout (default 30s) |
 | `--profile` | `QUALTRICS_PROFILE` | config profile (default `default`) |
 | `--config` | `QUALTRICS_CONFIG` | config file path |
+| `--full` | `QUALTRICS_FULL` | print full payloads instead of summaries |
 
 ## auth
 
@@ -38,7 +39,7 @@ raw `result` payload inside the standard envelope.
 
 `version` prints build info. `completion bash|zsh|fish|powershell` emits shell scripts.
 
-## Survey Platform (planned — see docs/endpoints.yaml)
+## Survey Platform
 
 | Command | Tier |
 |---|---|
@@ -58,4 +59,6 @@ raw `result` payload inside the standard envelope.
 | `events subscriptions create\|list\|get\|delete` | mutation / read / read / destructive |
 
 List commands accept `--limit`, `--offset`, and `--all`. Deeply nested payloads default to
-a summary view; `--full` prints everything.
+a summary view; `--full` prints everything. Payload-accepting commands read JSON from
+`-f <file>` (`-` for stdin). `surveys delete` requires typing the survey ID when
+interactive, or `--confirm` when piped.
