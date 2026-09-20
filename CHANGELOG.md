@@ -41,3 +41,12 @@ All notable changes to this project are documented in this file. The format is b
 - `responses import start|status|upload` with multipart file upload.
 - Binary download and multipart upload paths in the client, with retry on downloads.
 - 24 catalog entries now `done`.
+
+### Added — distributions, directories, and events
+
+- `distributions list|show|create|delete` and `distributions links list|show|create|update`.
+- `directories list|show|create|update|delete`.
+- `directories mailinglists list|show|create|update|delete`.
+- `directories mailinglists contacts list|show|create|update|delete`.
+- `events subscriptions create|get|delete`.
+- All 49 survey platform endpoints in `docs/endpoints.yaml` are now implemented and tested.

@@ -51,16 +51,16 @@ raw `result` payload inside the standard envelope.
 | `definitions options show\|update` | read / mutation |
 | `responses export start\|status\|download` | remote_action / read / read |
 | `responses import start\|status\|upload` | remote_action / read / remote_action |
-
-Export options: `--format csv|json|spss|tsv`, `--use-labels`, `--timezone`, `--compress`,
-`--breakout-set` (repeatable), `--seen-unanswered-recode`. `export start --wait` polls
-(`--interval`, default 5s) and downloads; `--extract` unzips the archive (zip-slip checked).
 | `distributions list\|show\|create\|delete` | read…destructive |
 | `distributions links list\|create\|show\|update\|delete` | read…destructive |
 | `directories list\|create\|show\|update\|delete` | read…destructive |
 | `directories mailinglists list\|create\|show\|update\|delete` | read…destructive |
 | `directories mailinglists contacts list\|create\|show\|update\|delete` | read…destructive |
-| `events subscriptions create\|list\|get\|delete` | mutation / read / read / destructive |
+| `events subscriptions create\|get\|delete` | mutation / read / destructive |
+
+Export options: `--format csv|json|spss|tsv`, `--use-labels`, `--timezone`, `--compress`,
+`--breakout-set` (repeatable), `--seen-unanswered-recode`. `export start --wait` polls
+(`--interval`, default 5s) and downloads; `--extract` unzips the archive (zip-slip checked).
 
 List commands accept `--limit`, `--offset`, and `--all`. Deeply nested payloads default to
 a summary view; `--full` prints everything. Payload-accepting commands read JSON from

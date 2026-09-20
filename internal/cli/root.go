@@ -108,4 +108,7 @@ func init() {
 	RootCmd.AddCommand(surveysCmd)
 	RootCmd.AddCommand(responsesCmd)
 	RootCmd.AddCommand(definitionsCmd)
+	RootCmd.AddCommand(distributionsCmd)
+	RootCmd.AddCommand(directoriesCmd)
+	RootCmd.AddCommand(eventsCmd)
 }

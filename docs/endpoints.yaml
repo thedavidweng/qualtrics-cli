@@ -1,355 +1,297 @@
 version: 1
 updated: 2026-09-20
-
-# Endpoint catalog: the CLI's own source of truth for the Qualtrics v3 API.
-# Qualtrics' published docs are known to be incomplete and occasionally
-# inaccurate, so this file records what we implement, at which safety tier,
-# with which pagination convention.
-#
-# status: done | planned
-# pagination: none | offset-limit | continuation-token | next-page | job
-# tier: read | remote_action | mutation | destructive
-
 endpoints:
-  - path: /surveys
-    method: GET
-    command: surveys list / auth status probe
-    tier: read
-    pagination: offset-limit
-    status: done
-
-  - path: /surveys/{surveyId}
-    method: GET
-    command: surveys show
-    tier: read
-    pagination: none
-    status: done
-
-  - path: /survey-definitions
-    method: POST
-    command: surveys create / definitions import
-    tier: mutation
-    pagination: none
-    status: done
-
-  - path: /survey-definitions/{surveyId}
-    method: GET
-    command: definitions show / definitions export
-    tier: read
-    pagination: none
-    status: done
-
-  - path: /survey-definitions/{surveyId}
-    method: DELETE
-    command: surveys delete
-    tier: destructive
-    pagination: none
-    status: done
-
-  - path: /survey-definitions/{surveyId}/questions
-    method: GET
-    command: definitions questions list
-    tier: read
-    pagination: none
-    status: done
-
-  - path: /survey-definitions/{surveyId}/questions
-    method: POST
-    command: definitions questions create
-    tier: mutation
-    pagination: none
-    status: done
-
-  - path: /survey-definitions/{surveyId}/questions/{questionId}
-    method: PUT
-    command: definitions questions update
-    tier: mutation
-    pagination: none
-    status: done
-
-  - path: /survey-definitions/{surveyId}/questions/{questionId}
-    method: DELETE
-    command: definitions questions delete
-    tier: destructive
-    pagination: none
-    status: done
-
-  - path: /survey-definitions/{surveyId}/blocks
-    method: POST
-    command: definitions blocks create
-    tier: mutation
-    pagination: none
-    status: done
-
-  - path: /survey-definitions/{surveyId}/blocks/{blockId}
-    method: GET
-    command: definitions blocks show
-    tier: read
-    pagination: none
-    status: done
-
-  - path: /survey-definitions/{surveyId}/blocks/{blockId}
-    method: PUT
-    command: definitions blocks update
-    tier: mutation
-    pagination: none
-    status: done
-
-  - path: /survey-definitions/{surveyId}/blocks/{blockId}
-    method: DELETE
-    command: definitions blocks delete
-    tier: destructive
-    pagination: none
-    status: done
-
-  - path: /survey-definitions/{surveyId}/flow
-    method: GET
-    command: definitions flow show
-    tier: read
-    pagination: none
-    status: done
-
-  - path: /survey-definitions/{surveyId}/flow
-    method: PUT
-    command: definitions flow update
-    tier: mutation
-    pagination: none
-    status: done
-
-  - path: /survey-definitions/{surveyId}/options
-    method: GET
-    command: definitions options show
-    tier: read
-    pagination: none
-    status: done
-
-  - path: /survey-definitions/{surveyId}/options
-    method: PUT
-    command: definitions options update
-    tier: mutation
-    pagination: none
-    status: done
-
-  - path: /responseexports
-    method: POST
-    command: responses export start
-    tier: remote_action
-    pagination: job
-    status: done
-
-  - path: /responseexports/{progressId}
-    method: GET
-    command: responses export status
-    tier: read
-    pagination: none
-    status: done
-
-  - path: /responseexports/{progressId}/file
-    method: GET
-    command: responses export download
-    tier: read
-    pagination: none
-    status: done
-
-  - path: /responseimports
-    method: POST
-    command: responses import start
-    tier: remote_action
-    pagination: job
-    status: done
-
-  - path: /responseimports/{progressId}
-    method: GET
-    command: responses import status
-    tier: read
-    pagination: none
-    status: done
-
-  - path: /responseimports/{progressId}/file
-    method: POST
-    command: responses import upload
-    tier: remote_action
-    pagination: none
-    status: done
-
-  - path: /distributions
-    method: GET
-    command: distributions list
-    tier: read
-    pagination: offset-limit
-    status: planned
-
-  - path: /distributions
-    method: POST
-    command: distributions create
-    tier: mutation
-    pagination: none
-    status: planned
-
-  - path: /distributions/{distributionId}
-    method: GET
-    command: distributions show
-    tier: read
-    pagination: none
-    status: planned
-
-  - path: /distributions/{distributionId}
-    method: DELETE
-    command: distributions delete
-    tier: destructive
-    pagination: none
-    status: planned
-
-  - path: /distributions/{distributionId}/links
-    method: GET
-    command: distributions links list
-    tier: read
-    pagination: offset-limit
-    status: planned
-
-  - path: /distributions/{distributionId}/links
-    method: POST
-    command: distributions links create
-    tier: mutation
-    pagination: none
-    status: planned
-
-  - path: /distributions/{distributionId}/links/{linkId}
-    method: GET
-    command: distributions links show
-    tier: read
-    pagination: none
-    status: planned
-
-  - path: /distributions/{distributionId}/links/{linkId}
-    method: PUT
-    command: distributions links update
-    tier: mutation
-    pagination: none
-    status: planned
-
-  - path: /directories
-    method: GET
-    command: directories list
-    tier: read
-    pagination: offset-limit
-    status: planned
-
-  - path: /directories
-    method: POST
-    command: directories create
-    tier: mutation
-    pagination: none
-    status: planned
-
-  - path: /directories/{directoryId}
-    method: GET
-    command: directories show
-    tier: read
-    pagination: none
-    status: planned
-
-  - path: /directories/{directoryId}
-    method: PUT
-    command: directories update
-    tier: mutation
-    pagination: none
-    status: planned
-
-  - path: /directories/{directoryId}
-    method: DELETE
-    command: directories delete
-    tier: destructive
-    pagination: none
-    status: planned
-
-  - path: /directories/{directoryId}/mailinglists
-    method: GET
-    command: directories mailinglists list
-    tier: read
-    pagination: offset-limit
-    status: planned
-
-  - path: /directories/{directoryId}/mailinglists
-    method: POST
-    command: directories mailinglists create
-    tier: mutation
-    pagination: none
-    status: planned
-
-  - path: /directories/{directoryId}/mailinglists/{mailingListId}
-    method: GET
-    command: directories mailinglists show
-    tier: read
-    pagination: none
-    status: planned
-
-  - path: /directories/{directoryId}/mailinglists/{mailingListId}
-    method: PUT
-    command: directories mailinglists update
-    tier: mutation
-    pagination: none
-    status: planned
-
-  - path: /directories/{directoryId}/mailinglists/{mailingListId}
-    method: DELETE
-    command: directories mailinglists delete
-    tier: destructive
-    pagination: none
-    status: planned
-
-  - path: /directories/{directoryId}/mailinglists/{mailingListId}/contacts
-    method: GET
-    command: directories mailinglists contacts list
-    tier: read
-    pagination: continuation-token
-    status: planned
-
-  - path: /directories/{directoryId}/mailinglists/{mailingListId}/contacts
-    method: POST
-    command: directories mailinglists contacts create
-    tier: mutation
-    pagination: none
-    status: planned
-
-  - path: /directories/{directoryId}/mailinglists/{mailingListId}/contacts/{contactId}
-    method: GET
-    command: directories mailinglists contacts show
-    tier: read
-    pagination: none
-    status: planned
-
-  - path: /directories/{directoryId}/mailinglists/{mailingListId}/contacts/{contactId}
-    method: PUT
-    command: directories mailinglists contacts update
-    tier: mutation
-    pagination: none
-    status: planned
-
-  - path: /directories/{directoryId}/mailinglists/{mailingListId}/contacts/{contactId}
-    method: DELETE
-    command: directories mailinglists contacts delete
-    tier: destructive
-    pagination: none
-    status: planned
-
-  - path: /eventsubscriptions
-    method: POST
-    command: events subscriptions create
-    tier: mutation
-    pagination: none
-    status: planned
-
-  - path: /eventsubscriptions/{subscriptionId}
-    method: GET
-    command: events subscriptions get
-    tier: read
-    pagination: none
-    status: planned
-
-  - path: /eventsubscriptions/{subscriptionId}
-    method: DELETE
-    command: events subscriptions delete
-    tier: destructive
-    pagination: none
-    status: planned
+- path: /surveys
+  method: GET
+  command: surveys list / auth status probe
+  tier: read
+  pagination: offset-limit
+  status: done
+- path: /surveys/{surveyId}
+  method: GET
+  command: surveys show
+  tier: read
+  pagination: none
+  status: done
+- path: /survey-definitions
+  method: POST
+  command: surveys create / definitions import
+  tier: mutation
+  pagination: none
+  status: done
+- path: /survey-definitions/{surveyId}
+  method: GET
+  command: definitions show / definitions export
+  tier: read
+  pagination: none
+  status: done
+- path: /survey-definitions/{surveyId}
+  method: DELETE
+  command: surveys delete
+  tier: destructive
+  pagination: none
+  status: done
+- path: /survey-definitions/{surveyId}/questions
+  method: GET
+  command: definitions questions list
+  tier: read
+  pagination: none
+  status: done
+- path: /survey-definitions/{surveyId}/questions
+  method: POST
+  command: definitions questions create
+  tier: mutation
+  pagination: none
+  status: done
+- path: /survey-definitions/{surveyId}/questions/{questionId}
+  method: PUT
+  command: definitions questions update
+  tier: mutation
+  pagination: none
+  status: done
+- path: /survey-definitions/{surveyId}/questions/{questionId}
+  method: DELETE
+  command: definitions questions delete
+  tier: destructive
+  pagination: none
+  status: done
+- path: /survey-definitions/{surveyId}/blocks
+  method: POST
+  command: definitions blocks create
+  tier: mutation
+  pagination: none
+  status: done
+- path: /survey-definitions/{surveyId}/blocks/{blockId}
+  method: GET
+  command: definitions blocks show
+  tier: read
+  pagination: none
+  status: done
+- path: /survey-definitions/{surveyId}/blocks/{blockId}
+  method: PUT
+  command: definitions blocks update
+  tier: mutation
+  pagination: none
+  status: done
+- path: /survey-definitions/{surveyId}/blocks/{blockId}
+  method: DELETE
+  command: definitions blocks delete
+  tier: destructive
+  pagination: none
+  status: done
+- path: /survey-definitions/{surveyId}/flow
+  method: GET
+  command: definitions flow show
+  tier: read
+  pagination: none
+  status: done
+- path: /survey-definitions/{surveyId}/flow
+  method: PUT
+  command: definitions flow update
+  tier: mutation
+  pagination: none
+  status: done
+- path: /survey-definitions/{surveyId}/options
+  method: GET
+  command: definitions options show
+  tier: read
+  pagination: none
+  status: done
+- path: /survey-definitions/{surveyId}/options
+  method: PUT
+  command: definitions options update
+  tier: mutation
+  pagination: none
+  status: done
+- path: /responseexports
+  method: POST
+  command: responses export start
+  tier: remote_action
+  pagination: job
+  status: done
+- path: /responseexports/{progressId}
+  method: GET
+  command: responses export status
+  tier: read
+  pagination: none
+  status: done
+- path: /responseexports/{progressId}/file
+  method: GET
+  command: responses export download
+  tier: read
+  pagination: none
+  status: done
+- path: /responseimports
+  method: POST
+  command: responses import start
+  tier: remote_action
+  pagination: job
+  status: done
+- path: /responseimports/{progressId}
+  method: GET
+  command: responses import status
+  tier: read
+  pagination: none
+  status: done
+- path: /responseimports/{progressId}/file
+  method: POST
+  command: responses import upload
+  tier: remote_action
+  pagination: none
+  status: done
+- path: /distributions
+  method: GET
+  command: distributions list
+  tier: read
+  pagination: offset-limit
+  status: done
+- path: /distributions
+  method: POST
+  command: distributions create
+  tier: mutation
+  pagination: none
+  status: done
+- path: /distributions/{distributionId}
+  method: GET
+  command: distributions show
+  tier: read
+  pagination: none
+  status: done
+- path: /distributions/{distributionId}
+  method: DELETE
+  command: distributions delete
+  tier: destructive
+  pagination: none
+  status: done
+- path: /distributions/{distributionId}/links
+  method: GET
+  command: distributions links list
+  tier: read
+  pagination: offset-limit
+  status: done
+- path: /distributions/{distributionId}/links
+  method: POST
+  command: distributions links create
+  tier: mutation
+  pagination: none
+  status: done
+- path: /distributions/{distributionId}/links/{linkId}
+  method: GET
+  command: distributions links show
+  tier: read
+  pagination: none
+  status: done
+- path: /distributions/{distributionId}/links/{linkId}
+  method: PUT
+  command: distributions links update
+  tier: mutation
+  pagination: none
+  status: done
+- path: /directories
+  method: GET
+  command: directories list
+  tier: read
+  pagination: offset-limit
+  status: done
+- path: /directories
+  method: POST
+  command: directories create
+  tier: mutation
+  pagination: none
+  status: done
+- path: /directories/{directoryId}
+  method: GET
+  command: directories show
+  tier: read
+  pagination: none
+  status: done
+- path: /directories/{directoryId}
+  method: PUT
+  command: directories update
+  tier: mutation
+  pagination: none
+  status: done
+- path: /directories/{directoryId}
+  method: DELETE
+  command: directories delete
+  tier: destructive
+  pagination: none
+  status: done
+- path: /directories/{directoryId}/mailinglists
+  method: GET
+  command: directories mailinglists list
+  tier: read
+  pagination: offset-limit
+  status: done
+- path: /directories/{directoryId}/mailinglists
+  method: POST
+  command: directories mailinglists create
+  tier: mutation
+  pagination: none
+  status: done
+- path: /directories/{directoryId}/mailinglists/{mailingListId}
+  method: GET
+  command: directories mailinglists show
+  tier: read
+  pagination: none
+  status: done
+- path: /directories/{directoryId}/mailinglists/{mailingListId}
+  method: PUT
+  command: directories mailinglists update
+  tier: mutation
+  pagination: none
+  status: done
+- path: /directories/{directoryId}/mailinglists/{mailingListId}
+  method: DELETE
+  command: directories mailinglists delete
+  tier: destructive
+  pagination: none
+  status: done
+- path: /directories/{directoryId}/mailinglists/{mailingListId}/contacts
+  method: GET
+  command: directories mailinglists contacts list
+  tier: read
+  pagination: continuation-token
+  status: done
+- path: /directories/{directoryId}/mailinglists/{mailingListId}/contacts
+  method: POST
+  command: directories mailinglists contacts create
+  tier: mutation
+  pagination: none
+  status: done
+- path: /directories/{directoryId}/mailinglists/{mailingListId}/contacts/{contactId}
+  method: GET
+  command: directories mailinglists contacts show
+  tier: read
+  pagination: none
+  status: done
+- path: /directories/{directoryId}/mailinglists/{mailingListId}/contacts/{contactId}
+  method: PUT
+  command: directories mailinglists contacts update
+  tier: mutation
+  pagination: none
+  status: done
+- path: /directories/{directoryId}/mailinglists/{mailingListId}/contacts/{contactId}
+  method: DELETE
+  command: directories mailinglists contacts delete
+  tier: destructive
+  pagination: none
+  status: done
+- path: /eventsubscriptions
+  method: POST
+  command: events subscriptions create
+  tier: mutation
+  pagination: none
+  status: done
+- path: /eventsubscriptions/{subscriptionId}
+  method: GET
+  command: events subscriptions get
+  tier: read
+  pagination: none
+  status: done
+- path: /eventsubscriptions/{subscriptionId}
+  method: DELETE
+  command: events subscriptions delete
+  tier: destructive
+  pagination: none
+  status: done
