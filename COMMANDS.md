@@ -45,6 +45,8 @@ raw `result` payload inside the standard envelope.
 |---|---|
 | `surveys list\|show\|create\|delete` | read / read / mutation / destructive |
 | `definitions show\|export\|import` | read / read / mutation |
+| `definitions build <spec.md> [-o out.qsf]` | local offline compiler |
+| `definitions qsf summary\|convert <file.qsf>` | local offline inspection / conversion |
 | `definitions questions list\|show\|create\|update\|delete` | read…destructive |
 | `definitions blocks list\|show\|create\|update\|delete` | read…destructive |
 | `definitions flow show\|update` | read / mutation |

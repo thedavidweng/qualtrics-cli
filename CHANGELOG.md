@@ -50,3 +50,15 @@ All notable changes to this project are documented in this file. The format is b
 - `directories mailinglists contacts list|show|create|update|delete`.
 - `events subscriptions create|get|delete`.
 - All 49 survey platform endpoints in `docs/endpoints.yaml` are now implemented and tested.
+
+### Added — offline survey toolchain (qsf compiler)
+
+- `internal/qsf`: pure-Go markdown-to-QSF compiler (`ParseSurvey`, `BuildQSF`,
+  `SummarizeQSF`, `ConvertQSFToDefinition`). Supports blocks, page breaks, 9 question
+  types, matrix questions with scale/scale-translations, branch-if, loop-from,
+  carry-from, show-if display logic, skip-if skip logic, recode values, variable
+  names, and inline text entry.
+- `definitions build <spec.md> [-o out.qsf]` compiles survey markdown to QSF offline.
+- `definitions qsf summary <file.qsf>` inspects QSF structure and question counts.
+- `definitions qsf convert <file.qsf> [-o out.json]` extracts survey definition JSON.
+- ADR-0007 documents the offline compiler architecture.

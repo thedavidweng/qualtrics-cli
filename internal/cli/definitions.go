@@ -4,10 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 
 	"github.com/thedavidweng/qualtrics-cli/internal/errors"
+	"github.com/thedavidweng/qualtrics-cli/internal/qsf"
 	"github.com/thedavidweng/qualtrics-cli/internal/qualtrics"
 	"github.com/thedavidweng/qualtrics-cli/internal/safety"
 )
@@ -16,6 +19,7 @@ var (
 	defPayloadFile string
 	defBlockID     string
 	defDescription string
+	qsfOutputPath  string
 )
 
 var definitionsCmd = &cobra.Command{
@@ -435,14 +439,162 @@ func printJSON(v any) {
 	fmt.Println(string(data))
 }
 
+var definitionsBuildCmd = &cobra.Command{
+	Use:   "build <spec.md> [-o output.qsf]",
+	Short: "Compile a Markdown survey spec to Qualtrics Survey Format (QSF)",
+	Long: `Compile a plain-text markdown survey specification into a .qsf file
+ready to import into Qualtrics via Create Project → Import a QSF File.
+No API access required.`,
+	Args: cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		runLocal("definitions.build", func() any {
+			content, err := os.ReadFile(args[0])
+			if err != nil {
+				return map[string]any{"error": err.Error()}
+			}
+			spec, err := qsf.ParseSurvey(string(content))
+			if err != nil {
+				return map[string]any{"error": err.Error()}
+			}
+			data, err := qsf.BuildQSF(spec)
+			if err != nil {
+				return map[string]any{"error": err.Error()}
+			}
+			outPath := qsfOutputPath
+			if outPath == "" {
+				base := strings.TrimSuffix(args[0], ".md")
+				outPath = base + ".qsf"
+			}
+			jsonBytes, err := json.MarshalIndent(data, "", "  ")
+			if err != nil {
+				return map[string]any{"error": err.Error()}
+			}
+			if err := os.WriteFile(outPath, jsonBytes, 0o600); err != nil {
+				return map[string]any{"error": err.Error()}
+			}
+			totalQ := 0
+			for _, b := range spec.Blocks {
+				for _, q := range b.Questions {
+					if !q.IsPageBreak {
+						totalQ++
+					}
+				}
+			}
+			return map[string]any{
+				"output":    outPath,
+				"title":     spec.Title,
+				"language":  spec.Language,
+				"blocks":    len(spec.Blocks),
+				"questions": totalQ,
+			}
+		}, func(data any) {
+			m, _ := data.(map[string]any)
+			if errStr, ok := m["error"].(string); ok {
+				fmt.Printf("Error: %s\n", errStr)
+				os.Exit(1)
+			}
+			fmt.Printf("Compiled %s\n", m["output"])
+			fmt.Printf("  Title:     %s\n", m["title"])
+			fmt.Printf("  Language:  %s\n", m["language"])
+			fmt.Printf("  Blocks:    %v\n", m["blocks"])
+			fmt.Printf("  Questions: %v\n", m["questions"])
+			fmt.Println("\nImport into Qualtrics: Create Project → Import a QSF File")
+		})
+	},
+}
+
+var qsfCmd = &cobra.Command{
+	Use:   "qsf",
+	Short: "Work with Qualtrics Survey Format (QSF) files offline",
+}
+
+var qsfSummaryCmd = &cobra.Command{
+	Use:   "summary <file.qsf>",
+	Short: "Display structural summary of a QSF file",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		runLocal("definitions.qsf.summary", func() any {
+			data, err := os.ReadFile(args[0])
+			if err != nil {
+				return map[string]any{"error": err.Error()}
+			}
+			summary, err := qsf.SummarizeQSF(data)
+			if err != nil {
+				return map[string]any{"error": err.Error()}
+			}
+			return summary
+		}, func(data any) {
+			s, ok := data.(*qsf.SummaryInfo)
+			if !ok {
+				m, _ := data.(map[string]any)
+				fmt.Printf("Error: %v\n", m["error"])
+				os.Exit(1)
+			}
+			fmt.Printf("survey:    %s (%s)\n", s.SurveyName, s.SurveyID)
+			fmt.Printf("language:  %s\n", s.Language)
+			fmt.Printf("blocks:    %d\n", s.BlockCount)
+			fmt.Printf("questions: %d\n\n", s.TotalQCount)
+			fmt.Printf("%-20s %-12s %-10s %s\n", "BLOCK_ID", "TYPE", "QUESTIONS", "DESCRIPTION")
+			for _, b := range s.Blocks {
+				fmt.Printf("%-20s %-12s %-10d %s\n", b.ID, b.Type, b.Questions, b.Description)
+			}
+		})
+	},
+}
+
+var qsfConvertCmd = &cobra.Command{
+	Use:   "convert <file.qsf> [-o output.json]",
+	Short: "Convert a QSF file into a survey definition JSON",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		runLocal("definitions.qsf.convert", func() any {
+			data, err := os.ReadFile(args[0])
+			if err != nil {
+				return map[string]any{"error": err.Error()}
+			}
+			defBytes, err := qsf.ConvertQSFToDefinition(data)
+			if err != nil {
+				return map[string]any{"error": err.Error()}
+			}
+			outPath := qsfOutputPath
+			if outPath == "" {
+				base := strings.TrimSuffix(args[0], ".qsf")
+				outPath = base + "_def.json"
+			}
+			if err := os.WriteFile(outPath, defBytes, 0o600); err != nil {
+				return map[string]any{"error": err.Error()}
+			}
+			return map[string]any{
+				"output": outPath,
+				"bytes":  len(defBytes),
+			}
+		}, func(data any) {
+			m, _ := data.(map[string]any)
+			if errStr, ok := m["error"].(string); ok {
+				fmt.Printf("Error: %s\n", errStr)
+				os.Exit(1)
+			}
+			fmt.Printf("Converted %s (%v bytes)\n", m["output"], m["bytes"])
+		})
+	},
+}
+
 func init() {
 	definitionsCmd.AddCommand(definitionsShowCmd)
 	definitionsCmd.AddCommand(definitionsExportCmd)
 	definitionsCmd.AddCommand(definitionsImportCmd)
+	definitionsCmd.AddCommand(definitionsBuildCmd)
+	definitionsCmd.AddCommand(qsfCmd)
 	definitionsCmd.AddCommand(questionsCmd)
 	definitionsCmd.AddCommand(blocksCmd)
 	definitionsCmd.AddCommand(flowCmd)
 	definitionsCmd.AddCommand(optionsCmd)
+
+	qsfCmd.AddCommand(qsfSummaryCmd)
+	qsfCmd.AddCommand(qsfConvertCmd)
+
+	definitionsBuildCmd.Flags().StringVarP(&qsfOutputPath, "output", "o", "", "output .qsf file")
+	qsfConvertCmd.Flags().StringVarP(&qsfOutputPath, "output", "o", "", "output definition .json file")
 
 	questionsCmd.AddCommand(questionsListCmd)
 	questionsCmd.AddCommand(questionsShowCmd)
