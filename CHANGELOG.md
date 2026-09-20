@@ -33,3 +33,11 @@ All notable changes to this project are documented in this file. The format is b
 - `runList` runner populating `meta.pagination{limit,offset,total,has_more}`.
 - Transport-stub contract tests pinning request paths, methods, query strings, and
   bodies for every new endpoint (18 catalog entries now `done`).
+
+### Added — async response jobs
+
+- `responses export start|status|download` with format/label/timezone/breakout options,
+  `--wait` polling, and `--extract` unzipping (zip-slip protected).
+- `responses import start|status|upload` with multipart file upload.
+- Binary download and multipart upload paths in the client, with retry on downloads.
+- 24 catalog entries now `done`.

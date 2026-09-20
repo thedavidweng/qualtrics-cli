@@ -106,5 +106,6 @@ func init() {
 	RootCmd.AddCommand(rawCmd)
 	RootCmd.AddCommand(completionCmd)
 	RootCmd.AddCommand(surveysCmd)
+	RootCmd.AddCommand(responsesCmd)
 	RootCmd.AddCommand(definitionsCmd)
 }

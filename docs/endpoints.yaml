@@ -135,42 +135,42 @@ endpoints:
     command: responses export start
     tier: remote_action
     pagination: job
-    status: planned
+    status: done
 
   - path: /responseexports/{progressId}
     method: GET
     command: responses export status
     tier: read
     pagination: none
-    status: planned
+    status: done
 
   - path: /responseexports/{progressId}/file
     method: GET
     command: responses export download
     tier: read
     pagination: none
-    status: planned
+    status: done
 
   - path: /responseimports
     method: POST
     command: responses import start
     tier: remote_action
     pagination: job
-    status: planned
+    status: done
 
   - path: /responseimports/{progressId}
     method: GET
     command: responses import status
     tier: read
     pagination: none
-    status: planned
+    status: done
 
   - path: /responseimports/{progressId}/file
     method: POST
     command: responses import upload
     tier: remote_action
     pagination: none
-    status: planned
+    status: done
 
   - path: /distributions
     method: GET
