@@ -62,3 +62,12 @@ All notable changes to this project are documented in this file. The format is b
 - `definitions qsf summary <file.qsf>` inspects QSF structure and question counts.
 - `definitions qsf convert <file.qsf> [-o out.json]` extracts survey definition JSON.
 - ADR-0007 documents the offline compiler architecture.
+
+### Added — e2e tests and release scaffolding
+
+- `tests/e2e/binary_test.go`: builds real binary, tests `--help` command discovery
+  against `requiredCommands` golden list, tests `version --json` envelope contract,
+  `doctor`, and `definitions build` + `qsf summary`.
+- Installer scripts: `install.sh` and `install.ps1`.
+- Release automation: `.goreleaser.yaml`, `.github/workflows/release.yml`, and
+  `release-please.yml`.
