@@ -45,6 +45,32 @@ archives:
 checksum:
   name_template: "checksums.txt"
 
+homebrew_casks:
+  - name: qualtrics
+    binaries:
+      - qualtrics
+    generate_completions_from_executable:
+      executable: "qualtrics"
+      args:
+        - completion
+      shell_parameter_format: cobra
+      shells:
+        - bash
+        - zsh
+        - fish
+    repository:
+      owner: thedavidweng
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    homepage: "https://github.com/thedavidweng/qualtrics-cli"
+    description: "Agent-friendly CLI for the Qualtrics Experience Management Platform & offline survey compiler"
+    hooks:
+      post:
+        install: |
+          if OS.mac?
+            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/qualtrics"]
+          end
+
 snapshot:
   version_template: "{{ incpatch .Version }}-next"
 

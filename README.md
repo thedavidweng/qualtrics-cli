@@ -51,6 +51,13 @@ The binary installs to `/usr/local/bin` (or `~/.local/bin`).
 <details>
 <summary>Other installation methods</summary>
 
+**Homebrew Cask (macOS/Linux):**
+
+```shell
+brew tap thedavidweng/tap
+brew install --cask qualtrics
+```
+
 **Go:**
 
 ```shell
