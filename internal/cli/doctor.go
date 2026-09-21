@@ -6,13 +6,14 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/thedavidweng/qualtrics-cli/internal/config"
+	"github.com/thedavidweng/qualtrics-cli/internal/errors"
 )
 
 var doctorCmd = &cobra.Command{
 	Use:   "doctor",
 	Short: "Check local configuration and credentials",
 	Run: func(cmd *cobra.Command, args []string) {
-		runLocal("doctor", func() any {
+		runLocal("doctor", func() (any, *errors.Error) {
 			cfgPath := cfgFile
 			if cfgPath == "" {
 				cfgPath = config.DefaultConfigPath()
@@ -67,8 +68,12 @@ var doctorCmd = &cobra.Command{
 			return map[string]any{
 				"checks":  checks,
 				"profile": profileName,
-			}
+			}, nil
 		}, func(data any) {
+			if fullOutput {
+				printJSON(data)
+				return
+			}
 			m, _ := data.(map[string]any)
 			fmt.Printf("profile: %s\n", m["profile"])
 			checks, _ := m["checks"].([]map[string]any)

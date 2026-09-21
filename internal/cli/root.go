@@ -10,6 +10,7 @@ import (
 
 	"github.com/thedavidweng/qualtrics-cli/internal/config"
 	"github.com/thedavidweng/qualtrics-cli/internal/errors"
+	"github.com/thedavidweng/qualtrics-cli/internal/output"
 	"github.com/thedavidweng/qualtrics-cli/internal/version"
 )
 
@@ -66,12 +67,17 @@ scripts, and local agents.`,
 
 func Execute() {
 	if err := RootCmd.Execute(); err != nil {
-		if e, ok := err.(*errors.Error); ok {
-			fmt.Println(err)
+		e, ok := err.(*errors.Error)
+		if !ok {
+			e = errors.New(errors.InvalidArguments, err.Error(), errors.CatValidation, false, err)
+		}
+		if jsonMode {
+			renderer := output.NewRenderer(nil, nil, true, pretty)
+			renderer.RenderError(output.NewErrorEnvelope("qualtrics", profile, output.SchemaVersion, requestID, e, 0))
 			os.Exit(e.ExitCode())
 		}
-		fmt.Println(err)
-		os.Exit(1)
+		_, _ = fmt.Fprintln(os.Stderr, "Error:", err)
+		os.Exit(e.ExitCode())
 	}
 }
 

@@ -24,7 +24,7 @@ internal/auth/          (planned) oauth token exchange
 internal/output/        JSON envelope + renderer (the stdout contract)
 internal/errors/        error taxonomy + exit codes
 internal/safety/        operation tiers + gates
-internal/qsf/           (planned) plain-text spec → QSF compiler
+internal/qsf/           plain-text spec → QSF compiler
 ```
 
 ### Adding an endpoint
@@ -42,9 +42,9 @@ internal/qsf/           (planned) plain-text spec → QSF compiler
   into `meta.command`, error payloads, and the endpoint catalog. One identifier everywhere.
 - Human output is a summary by default; `--full` prints the complete payload. stdout stays
   parseable in JSON mode; diagnostics go to stderr.
-- The client retries idempotent methods (GET/PUT/DELETE) on 429 and 5xx with `Retry-After`
-  honored; POST is never retried (creating an export job twice is worse than failing once).
-- Response bodies are capped at 10MB; redirects are rejected outright.
+- The client retries idempotent methods (GET/PUT/DELETE) on 429, 5xx, and transient
+  transport errors with `Retry-After` honored; POST is never retried (creating an export job twice is worse than failing once).
+- API response bodies are capped at 10MB (file downloads at 200MB); redirects are rejected outright.
 
 ## Testing without API access
 

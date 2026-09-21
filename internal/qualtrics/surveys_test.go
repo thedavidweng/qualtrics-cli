@@ -4,11 +4,22 @@ import (
 	"context"
 	"io"
 	"net/http"
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
 	"github.com/thedavidweng/qualtrics-cli/internal/testutil"
 )
+
+func fixture(t *testing.T, name string) string {
+	t.Helper()
+	data, err := os.ReadFile(filepath.Join("testdata", name))
+	if err != nil {
+		t.Fatal(err)
+	}
+	return string(data)
+}
 
 func stub(t *testing.T, fn func(*http.Request) (*http.Response, error)) *Client {
 	t.Helper()
@@ -22,7 +33,7 @@ func TestListSurveysRequestShape(t *testing.T) {
 	client := stub(t, func(r *http.Request) (*http.Response, error) {
 		gotPath = r.URL.Path
 		gotQuery = r.URL.RawQuery
-		return testutil.JSONResponse(200, `{"result":{"elements":[{"SurveyID":"SV_1","SurveyName":"N"}]},"meta":{"httpStatus":"200 - OK"}}`), nil
+		return testutil.JSONResponse(200, fixture(t, "surveys_list.json")), nil
 	})
 
 	page, err := client.ListSurveys(context.Background(), ListOptions{Offset: 50, Limit: 25})
@@ -130,5 +141,26 @@ func TestCollectAllWalksPages(t *testing.T) {
 	}
 	if calls != 2 {
 		t.Fatalf("calls = %d, want 2", calls)
+	}
+}
+
+func TestPaginateWalksPages(t *testing.T) {
+	calls := 0
+	client := stub(t, func(r *http.Request) (*http.Response, error) {
+		calls++
+		switch r.URL.Query().Get("offset") {
+		case "", "0":
+			return testutil.JSONResponse(200, `{"result":{"elements":[{"SurveyID":"SV_1"},{"SurveyID":"SV_2"}]}}`), nil
+		default:
+			return testutil.JSONResponse(200, `{"result":{"elements":[]}}`), nil
+		}
+	})
+
+	all, err := Paginate(context.Background(), client.ListSurveys, 2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(all) != 2 || calls != 2 {
+		t.Fatalf("collected %d in %d calls", len(all), calls)
 	}
 }

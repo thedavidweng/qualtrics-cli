@@ -11,13 +11,7 @@ import (
 
 func TestGetDefinitionParsesBlocks(t *testing.T) {
 	client := stub(t, func(r *http.Request) (*http.Response, error) {
-		return testutil.JSONResponse(200, `{"result":{
-			"SurveyID":"SV_1","SurveyName":"N",
-			"Blocks":{
-				"BL_1":{"ID":"BL_1","Type":"Default","Description":"Default Question Block","BlockElements":[{"Type":"Question","QuestionID":"QID1"},{"Type":"Question","QuestionID":"QID2"}]},
-				"BL_2":{"ID":"BL_2","Type":"Standard","Description":"Second","BlockElements":[{"Type":"Question","QuestionID":"QID3"}]}
-			}
-		}}`), nil
+		return testutil.JSONResponse(200, fixture(t, "definition.json")), nil
 	})
 
 	def, err := client.GetDefinition(context.Background(), "SV_1")
@@ -39,8 +33,8 @@ func TestGetDefinitionParsesBlocks(t *testing.T) {
 
 func TestListQuestionsAcceptsArrayAndMap(t *testing.T) {
 	bodies := []string{
-		`{"result":[{"QuestionID":"QID1","QuestionType":"MC","Selector":"SAVR"}]}`,
-		`{"result":{"QID1":{"QuestionType":"MC","Selector":"SAVR"}}}`,
+		fixture(t, "questions_array.json"),
+		fixture(t, "questions_map.json"),
 	}
 	for _, body := range bodies {
 		client := stub(t, func(r *http.Request) (*http.Response, error) {

@@ -69,3 +69,7 @@ func CollectAll[T any](ctx context.Context, fetch PageFetcher[T], pageSize int) 
 		offset = page.NextOffset
 	}
 }
+
+func Paginate[T any](ctx context.Context, fetch PageFetcher[T], pageSize int) ([]T, error) {
+	return CollectAll(ctx, fetch, pageSize)
+}

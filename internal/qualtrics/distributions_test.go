@@ -110,4 +110,13 @@ func TestDistributionsRequestShapes(t *testing.T) {
 	if got.method != "PUT" || got.path != "/API/v3/distributions/EMD_1/links/LNK_1" {
 		t.Fatalf("update link: %+v", got)
 	}
+
+	// Delete link
+	err = client.DeleteDistributionLink(ctx, "EMD_1", "LNK_1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.method != "DELETE" || got.path != "/API/v3/distributions/EMD_1/links/LNK_1" {
+		t.Fatalf("delete link: %+v", got)
+	}
 }

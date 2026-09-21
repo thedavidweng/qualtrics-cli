@@ -37,6 +37,12 @@ endpoints:
   tier: read
   pagination: none
   status: done
+- path: /survey-definitions/{surveyId}/questions/{questionId}
+  method: GET
+  command: definitions questions show
+  tier: read
+  pagination: none
+  status: done
 - path: /survey-definitions/{surveyId}/questions
   method: POST
   command: definitions questions create
@@ -185,6 +191,12 @@ endpoints:
   method: PUT
   command: distributions links update
   tier: mutation
+  pagination: none
+  status: done
+- path: /distributions/{distributionId}/links/{linkId}
+  method: DELETE
+  command: distributions links delete
+  tier: destructive
   pagination: none
   status: done
 - path: /directories

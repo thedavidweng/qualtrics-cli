@@ -49,6 +49,7 @@ The stdout contract. Schema version is bumped on any breaking change.
 | `RATE_LIMITED` | 5 | HTTP 429; `retry_after_ms` populated when the server sends it |
 | `NETWORK_UNREACHABLE` / `NETWORK_TIMEOUT` | 5 | transport failure |
 | `API_ERROR` | 6 | 5xx or unmapped API failure |
+| `API_SCHEMA_CHANGED` | 6 | Qualtrics returned a shape the CLI cannot parse |
 | `RESOURCE_NOT_FOUND` | 6 | HTTP 404 |
 | `VALIDATION_FAILED` | 7 | HTTP 400 (`QVAL_*`) |
 | `CONFIRMATION_REQUIRED` | 10 | write attempted without `--confirm` |

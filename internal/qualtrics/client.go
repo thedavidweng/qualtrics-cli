@@ -124,6 +124,9 @@ func (c *Client) Do(ctx context.Context, method, path string, body, result any) 
 			return apiErr
 		}
 		lastErr = apiErr
+		if retryAfter == 0 {
+			retryAfter = parseRetryAfterValue(resp.Header.Get("Retry-After"))
+		}
 		if retryAfter > 0 {
 			if err := sleepCtx(ctx, retryAfter); err != nil {
 				return err
@@ -185,8 +188,10 @@ func mapStatus(status int, raw []byte) (*errors.Error, time.Duration) {
 	}
 
 	switch {
-	case status == http.StatusUnauthorized:
+	case status == http.StatusUnauthorized && (code == "" || code == "DCD_7"):
 		return errors.New(errors.AuthTokenInvalid, "Qualtrics did not recognize the API token; run `qualtrics auth set-token`", errors.CatAuth, false, nil), 0
+	case status == http.StatusUnauthorized:
+		return errors.New(errors.APIError, message, errors.CatAPI, false, nil), 0
 	case status == http.StatusForbidden && code == "AuthZ_2.0":
 		return errors.New(errors.APIAccessForbidden, "token is valid but this user/brand has no access to the API endpoint; enable the API feature and the user's API permission in Qualtrics", errors.CatAPI, false, nil), 0
 	case status == http.StatusTooManyRequests:
@@ -197,6 +202,8 @@ func mapStatus(status int, raw []byte) (*errors.Error, time.Duration) {
 		return errors.New(errors.ValidationFailed, message, errors.CatValidation, false, nil), 0
 	case status >= 500:
 		return errors.New(errors.APIError, message, errors.CatAPI, true, nil), 0
+	case status >= 300 && status < 400:
+		return errors.New(errors.APIError, fmt.Sprintf("redirects are not followed (unexpected HTTP %d from Qualtrics)", status), errors.CatAPI, false, nil), 0
 	default:
 		return errors.New(errors.APIError, message, errors.CatAPI, false, nil), 0
 	}
@@ -214,6 +221,11 @@ func parseRetryAfter(raw []byte) time.Duration {
 		return 0
 	}
 	v := strings.TrimSpace(payload.Meta.Error.RetryAfter)
+	return parseRetryAfterValue(v)
+}
+
+func parseRetryAfterValue(v string) time.Duration {
+	v = strings.TrimSpace(v)
 	if v == "" {
 		return 0
 	}

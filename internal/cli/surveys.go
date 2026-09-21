@@ -34,7 +34,10 @@ var surveysListCmd = &cobra.Command{
 		runList(cmd.Context(), "surveys.list", "failed to list surveys",
 			func(ctx context.Context, client *qualtrics.Client) ([]qualtrics.Survey, *output.PaginationMeta, error) {
 				if listAll {
-					surveys, err := qualtrics.CollectAll(ctx, client.ListSurveys, listLimit)
+					if cmd.Flags().Changed("offset") {
+						return nil, nil, errors.New(errors.InvalidArguments, "--all cannot be combined with --offset", errors.CatValidation, false, nil)
+					}
+					surveys, err := qualtrics.Paginate(ctx, client.ListSurveys, listLimit)
 					return surveys, &output.PaginationMeta{Limit: len(surveys), Total: len(surveys)}, err
 				}
 				page, err := client.ListSurveys(ctx, qualtrics.ListOptions{Offset: listOffset, Limit: listLimit})
@@ -49,6 +52,10 @@ var surveysListCmd = &cobra.Command{
 				}, nil
 			},
 			func(surveys []qualtrics.Survey) {
+				if fullOutput {
+					printJSON(surveys)
+					return
+				}
 				fmt.Printf("%-20s %-40s %s\n", "ID", "NAME", "CREATED")
 				for _, s := range surveys {
 					fmt.Printf("%-20s %-40s %s\n", s.SurveyID, truncate(s.SurveyName, 40), s.CreationDate)
@@ -68,6 +75,10 @@ var surveysShowCmd = &cobra.Command{
 				return client.GetSurvey(ctx, args[0])
 			},
 			func(data any) {
+				if fullOutput {
+					printJSON(data)
+					return
+				}
 				s, _ := data.(qualtrics.Survey)
 				fmt.Printf("id:       %s\n", s.SurveyID)
 				fmt.Printf("name:     %s\n", s.SurveyName)
@@ -101,7 +112,13 @@ var surveysCreateCmd = &cobra.Command{
 					do: func(ctx context.Context, client *qualtrics.Client) (any, error) {
 						return client.CreateSurvey(ctx, req)
 					},
-					human: func() { fmt.Println("survey created") },
+					human: func(data any) {
+						if fullOutput {
+							printJSON(data)
+							return
+						}
+						fmt.Println("survey created")
+					},
 				}, nil
 			})
 	},
@@ -115,12 +132,13 @@ var surveysDeleteCmd = &cobra.Command{
 		runMutation(cmd, "surveys.delete", "failed to delete survey", safety.TierDestructive,
 			func() (mutation, *errors.Error) {
 				return mutation{
-					resourceID: args[0],
-					planAfter:  nil,
+					resourceID:   args[0],
+					typedConfirm: true,
+					planAfter:    nil,
 					do: func(ctx context.Context, client *qualtrics.Client) (any, error) {
 						return nil, client.DeleteSurvey(ctx, args[0])
 					},
-					human: func() { fmt.Printf("deleted %s\n", args[0]) },
+					human: func(data any) { fmt.Printf("deleted %s\n", args[0]) },
 				}, nil
 			})
 	},

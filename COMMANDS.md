@@ -33,7 +33,8 @@ Local checks only (no API call): config file, profile, datacenter, base URL, tok
 ## raw
 
 `raw <METHOD> <path> [--data JSON] [--method M]` — authenticated passthrough. Output is the
-raw `result` payload inside the standard envelope.
+raw `result` payload inside the standard envelope. Non-GET methods go through the
+safety gates: POST/PUT need `--confirm`, DELETE is destructive.
 
 ## version / completion
 
@@ -63,6 +64,7 @@ raw `result` payload inside the standard envelope.
 Export options: `--format csv|json|spss|tsv`, `--use-labels`, `--timezone`, `--compress`,
 `--breakout-set` (repeatable), `--seen-unanswered-recode`. `export start --wait` polls
 (`--interval`, default 5s) and downloads; `--extract` unzips the archive (zip-slip checked).
+`import start --wait` polls import progress (`--interval`, default 5s).
 
 List commands accept `--limit`, `--offset`, and `--all`. Deeply nested payloads default to
 a summary view; `--full` prints everything. Payload-accepting commands read JSON from

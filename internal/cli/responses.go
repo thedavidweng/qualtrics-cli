@@ -30,6 +30,8 @@ var (
 	exportExtract   bool
 	exportWait      bool
 	exportInterval  time.Duration
+	importWait      bool
+	importInterval  time.Duration
 	importFile      string
 )
 
@@ -78,7 +80,11 @@ var responsesExportStartCmd = &cobra.Command{
 						started = s
 						return s, nil
 					},
-					human: func() {
+					human: func(data any) {
+						if fullOutput {
+							printJSON(data)
+							return
+						}
 						fmt.Printf("export started: %s\n", started.ProgressID)
 					},
 				}, nil
@@ -107,12 +113,12 @@ func waitExport(cmd *cobra.Command, surveyID, progressID string) {
 			return
 		}
 		if !jsonMode {
-			fmt.Printf("\rprogress: %.0f%% (%s)   ", status.PercentComplete, status.Status)
+			_, _ = fmt.Fprintf(os.Stderr, "\rprogress: %.0f%% (%s)   ", status.PercentComplete, status.Status)
 		}
 		switch status.Status {
 		case qualtrics.JobComplete:
 			if !jsonMode {
-				fmt.Println()
+				fmt.Fprintln(os.Stderr)
 			}
 			downloadExport(ctx, renderer, deps, surveyID, progressID, start)
 			return
@@ -163,6 +169,10 @@ func downloadExport(ctx context.Context, renderer *output.Renderer, deps Command
 		renderer.RenderSuccess(output.NewEnvelope("responses.export.download", profile, output.SchemaVersion, requestID, payload, time.Since(start)))
 		return
 	}
+	if fullOutput {
+		printJSON(payload)
+		return
+	}
 	fmt.Printf("wrote %d bytes to %s\n", len(data), outPath)
 }
 
@@ -176,6 +186,10 @@ var responsesExportStatusCmd = &cobra.Command{
 				return client.GetExport(ctx, args[0])
 			},
 			func(data any) {
+				if fullOutput {
+					printJSON(data)
+					return
+				}
 				s, _ := data.(qualtrics.ExportStatus)
 				fmt.Printf("status: %s (%.0f%% complete)\n", s.Status, s.PercentComplete)
 			})
@@ -217,6 +231,10 @@ var responsesExportDownloadCmd = &cobra.Command{
 				}, nil
 			},
 			func(data any) {
+				if fullOutput {
+					printJSON(data)
+					return
+				}
 				m, _ := data.(map[string]any)
 				fmt.Printf("wrote %v bytes to %v\n", m["bytes"], m["path"])
 			})
@@ -233,17 +251,81 @@ var responsesImportStartCmd = &cobra.Command{
 	Short: "Start a response import job",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
+		var started qualtrics.ImportStart
 		runMutation(cmd, "responses.import.start", "failed to start import", safety.TierRemoteAction,
 			func() (mutation, *errors.Error) {
 				return mutation{
 					resourceID: args[0],
 					do: func(ctx context.Context, client *qualtrics.Client) (any, error) {
-						return client.StartImport(ctx, args[0])
+						s, err := client.StartImport(ctx, args[0])
+						if err != nil {
+							return nil, err
+						}
+						started = s
+						return s, nil
 					},
-					human: func() { fmt.Println("import started") },
+					human: func(data any) {
+						if fullOutput {
+							printJSON(data)
+							return
+						}
+						fmt.Println("import started")
+					},
 				}, nil
 			})
+
+		if !importWait || dryRun || started.ProgressID == "" {
+			return
+		}
+		pollImport(cmd, started.ProgressID)
 	},
+}
+
+func pollImport(cmd *cobra.Command, progressID string) {
+	start := time.Now()
+	renderer := output.NewRenderer(nil, nil, jsonMode, pretty)
+	deps, ok := newDeps(renderer, "responses.import.wait", start)
+	if !ok {
+		return
+	}
+
+	ctx := cmd.Context()
+	for {
+		status, err := deps.Client.GetImport(ctx, progressID)
+		if err != nil {
+			handleError(renderer, "responses.import.wait", wrapError(err, "import failed"), start)
+			return
+		}
+		if !jsonMode {
+			_, _ = fmt.Fprintf(os.Stderr, "\rprogress: %.0f%% (%s)   ", status.PercentComplete, status.Status)
+		}
+		switch status.Status {
+		case qualtrics.JobComplete:
+			if !jsonMode {
+				fmt.Fprintln(os.Stderr)
+			}
+			payload := map[string]any{
+				"progress_id":      progressID,
+				"status":           string(status.Status),
+				"percent_complete": status.PercentComplete,
+			}
+			if jsonMode {
+				renderer.RenderSuccess(output.NewEnvelope("responses.import.wait", profile, output.SchemaVersion, requestID, payload, time.Since(start)))
+				return
+			}
+			fmt.Printf("import %s complete\n", progressID)
+			return
+		case qualtrics.JobFailed:
+			handleError(renderer, "responses.import.wait", errors.New(errors.APIError, fmt.Sprintf("import %s failed", progressID), errors.CatAPI, false, nil), start)
+			return
+		}
+		select {
+		case <-ctx.Done():
+			handleError(renderer, "responses.import.wait", errors.New(errors.NetworkTimeout, "canceled while waiting for import", errors.CatNetwork, false, ctx.Err()), start)
+			return
+		case <-time.After(importInterval):
+		}
+	}
 }
 
 var responsesImportStatusCmd = &cobra.Command{
@@ -256,6 +338,10 @@ var responsesImportStatusCmd = &cobra.Command{
 				return client.GetImport(ctx, args[0])
 			},
 			func(data any) {
+				if fullOutput {
+					printJSON(data)
+					return
+				}
 				s, _ := data.(qualtrics.ImportStatus)
 				fmt.Printf("status: %s (%.0f%% complete)\n", s.Status, s.PercentComplete)
 			})
@@ -282,7 +368,7 @@ var responsesImportUploadCmd = &cobra.Command{
 					do: func(ctx context.Context, client *qualtrics.Client) (any, error) {
 						return nil, client.UploadImport(ctx, args[0], content, name)
 					},
-					human: func() { fmt.Println("uploaded") },
+					human: func(data any) { fmt.Println("uploaded") },
 				}, nil
 			})
 	},
@@ -353,6 +439,9 @@ func init() {
 
 	responsesExportDownloadCmd.Flags().StringVarP(&exportOutput, "output", "o", "", "output file")
 	responsesExportDownloadCmd.Flags().BoolVar(&exportExtract, "extract", false, "unzip after download")
+
+	responsesImportStartCmd.Flags().BoolVar(&importWait, "wait", false, "poll until complete")
+	responsesImportStartCmd.Flags().DurationVar(&importInterval, "interval", 5*time.Second, "poll interval for --wait")
 
 	responsesImportUploadCmd.Flags().StringVarP(&importFile, "file", "f", "", "response file to upload")
 }

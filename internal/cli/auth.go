@@ -65,6 +65,10 @@ var authStatusCmd = &cobra.Command{
 				return status, nil
 			},
 			func(data any) {
+				if fullOutput {
+					printJSON(data)
+					return
+				}
 				m, _ := data.(map[string]any)
 				fmt.Printf("profile:    %v\n", m["profile"])
 				fmt.Printf("datacenter: %v\n", m["datacenter"])

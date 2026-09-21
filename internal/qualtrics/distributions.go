@@ -121,3 +121,7 @@ func (c *Client) CreateDistributionLinks(ctx context.Context, distributionID str
 func (c *Client) UpdateDistributionLink(ctx context.Context, distributionID, linkID string, payload json.RawMessage) error {
 	return c.Do(ctx, "PUT", "/distributions/"+distributionID+"/links/"+linkID, payload, nil)
 }
+
+func (c *Client) DeleteDistributionLink(ctx context.Context, distributionID, linkID string) error {
+	return c.Do(ctx, "DELETE", "/distributions/"+distributionID+"/links/"+linkID, nil, nil)
+}

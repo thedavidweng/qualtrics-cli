@@ -54,7 +54,7 @@ func (e *Error) ExitCode() int {
 		return 4
 	case RateLimited, NetworkUnreachable, NetworkTimeout:
 		return 5
-	case APIError, APISchemaChanged, APIAccessForbidden:
+	case APIError, APISchemaChanged, APIAccessForbidden, ResourceNotFound:
 		return 6
 	case ValidationFailed:
 		return 7

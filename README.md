@@ -109,6 +109,10 @@ qualtrics definitions qsf summary survey.qsf
 
 Import into Qualtrics: **Create Project → Import a QSF File**.
 
+Question types are `[mc]`, `[mc-multi]`, `[mc-dropdown]`, `[rank]`, `[text]`,
+`[text-essay]`, `[matrix]`, `[matrix-multi]`, and `[description]`; an unknown
+`[type]` falls back to `[text]`.
+
 ### 2. Online Workflow: API Operations
 
 ```shell
@@ -149,7 +153,7 @@ rm -rf ~/.config/qualtrics-cli
 | `responses export` | Asynchronous response export jobs (`start`, `status`, `download`) |
 | `responses import` | Asynchronous response import jobs (`start`, `status`, `upload`) |
 | `distributions` | Survey distributions and link generation (`list`, `show`, `create`, `delete`) |
-| `distributions links` | Distribution link management (`list`, `show`, `create`, `update`) |
+| `distributions links` | Distribution link management (`list`, `show`, `create`, `update`, `delete`) |
 | `directories` | XM Directory containers (`list`, `show`, `create`, `update`, `delete`) |
 | `directories mailinglists` | Mailing list management (`list`, `show`, `create`, `update`, `delete`) |
 | `directories mailinglists contacts` | Contact records (`list`, `show`, `create`, `update`, `delete`) |
@@ -181,7 +185,7 @@ Configuration precedence: defaults → config file → `QUALTRICS_*` environment
 | Tier | Example Commands | Gate |
 |---|---|---|
 | `read` | `surveys list`, `definitions show`, `doctor` | None |
-| `remote_action` | `responses export start`, `responses import upload` | None |
+| `remote_action` | `responses export start`, `responses import upload` | `--confirm` (or `--dry-run`) |
 | `mutation` | `distributions create`, `definitions questions update` | `--confirm` (or `--dry-run`) |
 | `destructive` | `surveys delete`, `contacts delete` | Typed confirmation (or `--confirm`) |
 

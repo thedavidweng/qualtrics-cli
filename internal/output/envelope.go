@@ -49,7 +49,7 @@ func NewEnvelope(command, profile, schemaVersion, requestID string, data any, du
 	}
 }
 
-func NewErrorEnvelope(command, profile, schemaVersion string, err *errors.Error, duration time.Duration) *ErrorEnvelope {
+func NewErrorEnvelope(command, profile, schemaVersion, requestID string, err *errors.Error, duration time.Duration) *ErrorEnvelope {
 	return &ErrorEnvelope{
 		OK:    false,
 		Error: err,
@@ -58,6 +58,7 @@ func NewErrorEnvelope(command, profile, schemaVersion string, err *errors.Error,
 			Profile:       profile,
 			DurationMS:    duration.Milliseconds(),
 			SchemaVersion: schemaVersion,
+			RequestID:     requestID,
 		},
 	}
 }

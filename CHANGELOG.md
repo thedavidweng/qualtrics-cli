@@ -6,6 +6,26 @@ All notable changes to this project are documented in this file. The format is b
 
 ## [Unreleased]
 
+### Fixed
+
+- Spec conformance pass: `meta.request_id` is now present on error envelopes;
+  `RESOURCE_NOT_FOUND` exits 6; `API_SCHEMA_CHANGED` is documented in
+  `JSON_SCHEMA.md`.
+- `raw` write methods go through the safety gates (POST/PUT need `--confirm`,
+  DELETE is destructive); JSON-mode destructive commands never prompt (exit 10
+  without `--confirm`); `--confirm` satisfies non-typed destructives; only
+  `surveys delete` requires typing the ID when interactive.
+- `--full` is honored by every human summary; `--dry-run` prints the plan in
+  human mode; progress, prompts, and CLI errors go to stderr; `-o -` with
+  `--json` is rejected instead of mixing bytes with the envelope.
+- `distributions links delete` implemented (typed client, command, catalog);
+  `definitions questions show` added to the endpoint catalog.
+- Every list command accepts `--all` (mutually exclusive with `--offset`);
+  client honors the HTTP `Retry-After` header; 401 maps to invalid-token only
+  for `DCD_7`/empty codes; `responses import start` supports `--wait`.
+- Async jobs share one `Job` type; response fixtures live in
+  `internal/qualtrics/testdata/`; `convert` skips Trash blocks like `summary`.
+
 ### Added
 
 - Repository skeleton: cobra root with `--json`/`--pretty`/`--read-only`/`--dry-run`/

@@ -36,13 +36,13 @@ func TestEnvelopeShape(t *testing.T) {
 }
 
 func TestErrorEnvelopeShape(t *testing.T) {
-	env := NewErrorEnvelope("surveys.list", "default", SchemaVersion, errors.New(errors.APIAccessForbidden, "no api access", errors.CatAPI, false, nil), time.Second)
+	env := NewErrorEnvelope("surveys.list", "default", SchemaVersion, "req-9", errors.New(errors.APIAccessForbidden, "no api access", errors.CatAPI, false, nil), time.Second)
 	data, err := json.Marshal(env)
 	if err != nil {
 		t.Fatal(err)
 	}
 	got := string(data)
-	for _, want := range []string{`"ok":false`, `"code":"API_ACCESS_FORBIDDEN"`, `"category":"api"`} {
+	for _, want := range []string{`"ok":false`, `"code":"API_ACCESS_FORBIDDEN"`, `"category":"api"`, `"request_id":"req-9"`} {
 		if !strings.Contains(got, want) {
 			t.Fatalf("error envelope missing %s: %s", want, got)
 		}

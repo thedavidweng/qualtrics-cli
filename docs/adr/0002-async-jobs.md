@@ -4,4 +4,4 @@ Response exports and response imports are asynchronous in the Qualtrics API: a P
 
 **Considered Options**: blocking-only (rejected: exports of large surveys run for many minutes and would hold a terminal with no progress signal); poll-and-hide entirely (rejected: scripts and agents want the progress ID so they can re-attach later).
 
-**Consequences**: every async endpoint gets one shared `Job` type (progress ID, status, percent complete, file ID). Polling uses a fixed interval (`--interval`, default 5s) rather than exponential backoff, because the server reports `percentComplete` and there is nothing to back off from. The `--wait` path is the only place the CLI sleeps.
+**Consequences**: every async endpoint gets one shared `Job` type (progress ID, status, percent complete, file ID). Polling uses a fixed interval (`--interval`, default 5s) rather than exponential backoff, because the server reports `percentComplete` and there is nothing to back off from. The `--wait` path is the only place the CLI sleeps on purpose; client retry backoff is the only other sleep.

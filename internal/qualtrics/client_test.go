@@ -100,6 +100,42 @@ func TestNoRetryOnPost(t *testing.T) {
 	}
 }
 
+func TestRetriesOn429WithHeaderRetryAfter(t *testing.T) {
+	var calls int32
+	client := newTestClient(func(r *http.Request) (*http.Response, error) {
+		n := atomic.AddInt32(&calls, 1)
+		if n == 1 {
+			resp := testutil.JSONResponse(429, `{"meta":{"httpStatus":"429 - Too Many Requests"}}`)
+			resp.Header.Set("Retry-After", "0")
+			return resp, nil
+		}
+		return testutil.JSONResponse(200, `{"result":{"ok":true}}`), nil
+	})
+
+	var out map[string]any
+	if err := client.Do(context.Background(), "GET", "/surveys", nil, &out); err != nil {
+		t.Fatal(err)
+	}
+	if atomic.LoadInt32(&calls) != 2 {
+		t.Fatalf("calls = %d, want 2", calls)
+	}
+}
+
+func TestUnauthorizedWithoutDCD7IsAPIError(t *testing.T) {
+	client := newTestClient(func(r *http.Request) (*http.Response, error) {
+		return testutil.JSONResponse(401, `{"meta":{"httpStatus":"401 - Unauthorized","error":{"errorCode":"OTHER_1","errorMessage":"denied"}}}`), nil
+	})
+	var out any
+	err := client.Do(context.Background(), "GET", "/surveys", nil, &out)
+	var e *qerrors.Error
+	if !errors.As(err, &e) {
+		t.Fatalf("err = %v", err)
+	}
+	if e.Code != "API_ERROR" {
+		t.Fatalf("code = %s, want API_ERROR", e.Code)
+	}
+}
+
 func TestMapsAuthErrors(t *testing.T) {
 	client := newTestClient(func(r *http.Request) (*http.Response, error) {
 		return testutil.JSONResponse(401, `{"meta":{"httpStatus":"401 - Unauthorized","error":{"errorCode":"DCD_7","errorMessage":"Unrecognized X-API-TOKEN."}}}`), nil

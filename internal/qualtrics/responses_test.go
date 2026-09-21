@@ -45,7 +45,7 @@ func TestStartExportRequestShape(t *testing.T) {
 
 func TestGetExportParsesStatus(t *testing.T) {
 	client := stub(t, func(r *http.Request) (*http.Response, error) {
-		return testutil.JSONResponse(200, `{"result":{"status":"complete","percentComplete":100,"fileId":"F_1"}}`), nil
+		return testutil.JSONResponse(200, fixture(t, "export_status.json")), nil
 	})
 
 	status, err := client.GetExport(context.Background(), "ES_abc")
@@ -54,6 +54,15 @@ func TestGetExportParsesStatus(t *testing.T) {
 	}
 	if status.Status != JobComplete || status.PercentComplete != 100 || status.FileID != "F_1" {
 		t.Fatalf("status = %+v", status)
+	}
+}
+
+func TestJobIsSharedStatusType(t *testing.T) {
+	roundTrip := func(j Job) Job { return j }
+	export := roundTrip(ExportStatus{ProgressID: "ES_1", Status: JobComplete, PercentComplete: 100, FileID: "F_1"})
+	imp := roundTrip(ImportStatus{ProgressID: "ES_1", Status: JobComplete, PercentComplete: 100, FileID: "F_1"})
+	if export != imp || imp.ProgressID != "ES_1" || imp.Status != JobComplete || imp.PercentComplete != 100 || imp.FileID != "F_1" {
+		t.Fatalf("status types diverged: %+v vs %+v", export, imp)
 	}
 }
 

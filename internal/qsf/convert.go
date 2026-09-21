@@ -47,6 +47,9 @@ func ConvertQSFToDefinition(data []byte) ([]byte, error) {
 					if !ok {
 						continue
 					}
+					if bm["Type"] == "Trash" {
+						continue
+					}
 					bID, _ := bm["ID"].(string)
 					if bID != "" {
 						blocksMap[bID] = bm

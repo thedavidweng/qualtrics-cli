@@ -55,7 +55,13 @@ var eventSubsCreateCmd = &cobra.Command{
 					do: func(ctx context.Context, client *qualtrics.Client) (any, error) {
 						return client.CreateEventSubscription(ctx, payload)
 					},
-					human: func() { fmt.Println("event subscription created") },
+					human: func(data any) {
+						if fullOutput {
+							printJSON(data)
+							return
+						}
+						fmt.Println("event subscription created")
+					},
 				}, nil
 			})
 	},
@@ -73,7 +79,7 @@ var eventSubsDeleteCmd = &cobra.Command{
 					do: func(ctx context.Context, client *qualtrics.Client) (any, error) {
 						return nil, client.DeleteEventSubscription(ctx, args[0])
 					},
-					human: func() { fmt.Printf("deleted subscription %s\n", args[0]) },
+					human: func(data any) { fmt.Printf("deleted subscription %s\n", args[0]) },
 				}, nil
 			})
 	},

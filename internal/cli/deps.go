@@ -75,11 +75,15 @@ func runList[T any](ctx context.Context, command, failMsg string, fn func(contex
 	human(items)
 }
 
-func runLocal(command string, fn func() any, human func(any)) {
+func runLocal(command string, fn func() (any, *errors.Error), human func(any)) {
 	start := time.Now()
 	renderer := output.NewRenderer(nil, nil, jsonMode, pretty)
 
-	data := fn()
+	data, verr := fn()
+	if verr != nil {
+		handleError(renderer, command, verr, start)
+		return
+	}
 	if jsonMode {
 		env := output.NewEnvelope(command, profile, output.SchemaVersion, requestID, data, time.Since(start))
 		renderer.RenderSuccess(env)
@@ -112,10 +116,11 @@ func run[T any](ctx context.Context, command, failMsg string, fn func(context.Co
 }
 
 type mutation struct {
-	resourceID string
-	planAfter  any
-	do         func(context.Context, *qualtrics.Client) (any, error)
-	human      func()
+	resourceID   string
+	typedConfirm bool
+	planAfter    any
+	do           func(context.Context, *qualtrics.Client) (any, error)
+	human        func(any)
 }
 
 func runMutation(cmd *cobra.Command, command, failMsg string, tier safety.OperationTier, prepare func() (mutation, *errors.Error)) {
@@ -139,12 +144,16 @@ func runMutation(cmd *cobra.Command, command, failMsg string, tier safety.Operat
 			"resource_id": m.resourceID,
 			"after":       m.planAfter,
 		}
-		renderer.RenderSuccess(output.NewEnvelope(command, profile, output.SchemaVersion, requestID, plan, time.Since(start)))
+		if jsonMode {
+			renderer.RenderSuccess(output.NewEnvelope(command, profile, output.SchemaVersion, requestID, plan, time.Since(start)))
+			return
+		}
+		printJSON(plan)
 		return
 	}
 
 	if tier == safety.TierDestructive {
-		if err := confirmDestructive(m.resourceID); err != nil {
+		if err := confirmDestructive(m.resourceID, m.typedConfirm); err != nil {
 			handleError(renderer, command, err, start)
 			return
 		}
@@ -165,10 +174,19 @@ func runMutation(cmd *cobra.Command, command, failMsg string, tier safety.Operat
 		renderer.RenderSuccess(output.NewEnvelope(command, profile, output.SchemaVersion, requestID, data, time.Since(start)))
 		return
 	}
-	m.human()
+	m.human(data)
 }
 
-func confirmDestructive(resourceID string) *errors.Error {
+func confirmDestructive(resourceID string, typedOnly bool) *errors.Error {
+	if jsonMode {
+		if confirm {
+			return nil
+		}
+		return errors.New(errors.ConfirmationRequired, "destructive operation requires --confirm", errors.CatSafety, false, nil)
+	}
+	if confirm && !typedOnly {
+		return nil
+	}
 	if resourceID == "" {
 		return errors.New(errors.ConfirmationRequired, "destructive operation requires --confirm", errors.CatSafety, false, nil)
 	}
@@ -178,7 +196,7 @@ func confirmDestructive(resourceID string) *errors.Error {
 		}
 		return errors.New(errors.ConfirmationRequired, fmt.Sprintf("destructive operation on %s requires --confirm when stdin is not interactive", resourceID), errors.CatSafety, false, nil)
 	}
-	fmt.Printf("This deletes %s and cannot be undone. Type %s to confirm: ", resourceID, resourceID)
+	_, _ = fmt.Fprintf(os.Stderr, "This deletes %s and cannot be undone. Type %s to confirm: ", resourceID, resourceID)
 	reader := bufio.NewReader(os.Stdin)
 	line, _ := reader.ReadString('\n')
 	if strings.TrimSpace(line) != resourceID {
@@ -200,6 +218,9 @@ func readPayload(path string) ([]byte, error) {
 
 func writeFile(path string, data []byte) error {
 	if path == "" || path == "-" {
+		if jsonMode {
+			return errors.New(errors.InvalidArguments, "cannot stream file bytes to stdout in --json mode; use -o <file>", errors.CatValidation, false, nil)
+		}
 		_, err := os.Stdout.Write(data)
 		return err
 	}
@@ -217,7 +238,7 @@ func handleError(renderer *output.Renderer, command string, err error, start tim
 	if !ok {
 		e = errors.New(errors.InternalError, err.Error(), errors.CatInternal, false, err)
 	}
-	env := output.NewErrorEnvelope(command, profile, output.SchemaVersion, e, time.Since(start))
+	env := output.NewErrorEnvelope(command, profile, output.SchemaVersion, requestID, e, time.Since(start))
 	renderer.RenderError(env)
 	os.Exit(e.ExitCode())
 }

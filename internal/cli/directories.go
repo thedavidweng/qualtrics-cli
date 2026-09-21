@@ -17,6 +17,7 @@ var (
 	dirPayloadFile string
 	dirLimit       int
 	dirOffset      int
+	dirAll         bool
 )
 
 var directoriesCmd = &cobra.Command{
@@ -30,6 +31,13 @@ var directoriesListCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		runList(cmd.Context(), "directories.list", "failed to list directories",
 			func(ctx context.Context, client *qualtrics.Client) ([]qualtrics.Directory, *output.PaginationMeta, error) {
+				if dirAll {
+					if cmd.Flags().Changed("offset") {
+						return nil, nil, errors.New(errors.InvalidArguments, "--all cannot be combined with --offset", errors.CatValidation, false, nil)
+					}
+					items, err := qualtrics.Paginate(ctx, client.ListDirectories, dirLimit)
+					return items, &output.PaginationMeta{Limit: len(items), Total: len(items)}, err
+				}
 				page, err := client.ListDirectories(ctx, qualtrics.ListOptions{Offset: dirOffset, Limit: dirLimit})
 				if err != nil {
 					return nil, nil, err
@@ -42,6 +50,10 @@ var directoriesListCmd = &cobra.Command{
 				}, nil
 			},
 			func(items []qualtrics.Directory) {
+				if fullOutput {
+					printJSON(items)
+					return
+				}
 				fmt.Printf("%-25s %s\n", "DIRECTORY_ID", "NAME")
 				for _, d := range items {
 					fmt.Printf("%-25s %s\n", d.DirectoryID, d.Name)
@@ -80,7 +92,13 @@ var directoriesCreateCmd = &cobra.Command{
 					do: func(ctx context.Context, client *qualtrics.Client) (any, error) {
 						return client.CreateDirectory(ctx, payload)
 					},
-					human: func() { fmt.Println("directory created") },
+					human: func(data any) {
+						if fullOutput {
+							printJSON(data)
+							return
+						}
+						fmt.Println("directory created")
+					},
 				}, nil
 			})
 	},
@@ -103,7 +121,7 @@ var directoriesUpdateCmd = &cobra.Command{
 					do: func(ctx context.Context, client *qualtrics.Client) (any, error) {
 						return nil, client.UpdateDirectory(ctx, args[0], payload)
 					},
-					human: func() { fmt.Printf("updated %s\n", args[0]) },
+					human: func(data any) { fmt.Printf("updated %s\n", args[0]) },
 				}, nil
 			})
 	},
@@ -121,7 +139,7 @@ var directoriesDeleteCmd = &cobra.Command{
 					do: func(ctx context.Context, client *qualtrics.Client) (any, error) {
 						return nil, client.DeleteDirectory(ctx, args[0])
 					},
-					human: func() { fmt.Printf("deleted %s\n", args[0]) },
+					human: func(data any) { fmt.Printf("deleted %s\n", args[0]) },
 				}, nil
 			})
 	},
@@ -141,6 +159,15 @@ var mailinglistsListCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		runList(cmd.Context(), "directories.mailinglists.list", "failed to list mailing lists",
 			func(ctx context.Context, client *qualtrics.Client) ([]qualtrics.MailingList, *output.PaginationMeta, error) {
+				if dirAll {
+					if cmd.Flags().Changed("offset") {
+						return nil, nil, errors.New(errors.InvalidArguments, "--all cannot be combined with --offset", errors.CatValidation, false, nil)
+					}
+					items, err := qualtrics.Paginate(ctx, func(ctx context.Context, opts qualtrics.ListOptions) (qualtrics.Page[qualtrics.MailingList], error) {
+						return client.ListMailingLists(ctx, args[0], opts)
+					}, dirLimit)
+					return items, &output.PaginationMeta{Limit: len(items), Total: len(items)}, err
+				}
 				page, err := client.ListMailingLists(ctx, args[0], qualtrics.ListOptions{Offset: dirOffset, Limit: dirLimit})
 				if err != nil {
 					return nil, nil, err
@@ -153,6 +180,10 @@ var mailinglistsListCmd = &cobra.Command{
 				}, nil
 			},
 			func(items []qualtrics.MailingList) {
+				if fullOutput {
+					printJSON(items)
+					return
+				}
 				fmt.Printf("%-20s %s\n", "MAILING_LIST_ID", "NAME")
 				for _, m := range items {
 					fmt.Printf("%-20s %s\n", m.ID, m.Name)
@@ -192,7 +223,13 @@ var mailinglistsCreateCmd = &cobra.Command{
 					do: func(ctx context.Context, client *qualtrics.Client) (any, error) {
 						return client.CreateMailingList(ctx, args[0], payload)
 					},
-					human: func() { fmt.Println("mailing list created") },
+					human: func(data any) {
+						if fullOutput {
+							printJSON(data)
+							return
+						}
+						fmt.Println("mailing list created")
+					},
 				}, nil
 			})
 	},
@@ -215,7 +252,7 @@ var mailinglistsUpdateCmd = &cobra.Command{
 					do: func(ctx context.Context, client *qualtrics.Client) (any, error) {
 						return nil, client.UpdateMailingList(ctx, args[0], args[1], payload)
 					},
-					human: func() { fmt.Printf("updated %s\n", args[1]) },
+					human: func(data any) { fmt.Printf("updated %s\n", args[1]) },
 				}, nil
 			})
 	},
@@ -233,7 +270,7 @@ var mailinglistsDeleteCmd = &cobra.Command{
 					do: func(ctx context.Context, client *qualtrics.Client) (any, error) {
 						return nil, client.DeleteMailingList(ctx, args[0], args[1])
 					},
-					human: func() { fmt.Printf("deleted %s\n", args[1]) },
+					human: func(data any) { fmt.Printf("deleted %s\n", args[1]) },
 				}, nil
 			})
 	},
@@ -253,6 +290,15 @@ var contactsListCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		runList(cmd.Context(), "directories.mailinglists.contacts.list", "failed to list contacts",
 			func(ctx context.Context, client *qualtrics.Client) ([]qualtrics.Contact, *output.PaginationMeta, error) {
+				if dirAll {
+					if cmd.Flags().Changed("offset") {
+						return nil, nil, errors.New(errors.InvalidArguments, "--all cannot be combined with --offset", errors.CatValidation, false, nil)
+					}
+					items, err := qualtrics.Paginate(ctx, func(ctx context.Context, opts qualtrics.ListOptions) (qualtrics.Page[qualtrics.Contact], error) {
+						return client.ListContacts(ctx, args[0], args[1], opts)
+					}, dirLimit)
+					return items, &output.PaginationMeta{Limit: len(items), Total: len(items)}, err
+				}
 				page, err := client.ListContacts(ctx, args[0], args[1], qualtrics.ListOptions{Offset: dirOffset, Limit: dirLimit})
 				if err != nil {
 					return nil, nil, err
@@ -265,6 +311,10 @@ var contactsListCmd = &cobra.Command{
 				}, nil
 			},
 			func(items []qualtrics.Contact) {
+				if fullOutput {
+					printJSON(items)
+					return
+				}
 				fmt.Printf("%-20s %-15s %-15s %-30s %s\n", "CONTACT_ID", "FIRST", "LAST", "EMAIL", "UNSUB")
 				for _, c := range items {
 					fmt.Printf("%-20s %-15s %-15s %-30s %v\n", c.ContactID, c.FirstName, c.LastName, c.Email, c.Unsubscribed)
@@ -304,7 +354,13 @@ var contactsCreateCmd = &cobra.Command{
 					do: func(ctx context.Context, client *qualtrics.Client) (any, error) {
 						return client.CreateContact(ctx, args[0], args[1], payload)
 					},
-					human: func() { fmt.Println("contact created") },
+					human: func(data any) {
+						if fullOutput {
+							printJSON(data)
+							return
+						}
+						fmt.Println("contact created")
+					},
 				}, nil
 			})
 	},
@@ -327,7 +383,7 @@ var contactsUpdateCmd = &cobra.Command{
 					do: func(ctx context.Context, client *qualtrics.Client) (any, error) {
 						return nil, client.UpdateContact(ctx, args[0], args[1], args[2], payload)
 					},
-					human: func() { fmt.Printf("updated %s\n", args[2]) },
+					human: func(data any) { fmt.Printf("updated %s\n", args[2]) },
 				}, nil
 			})
 	},
@@ -345,7 +401,7 @@ var contactsDeleteCmd = &cobra.Command{
 					do: func(ctx context.Context, client *qualtrics.Client) (any, error) {
 						return nil, client.DeleteContact(ctx, args[0], args[1], args[2])
 					},
-					human: func() { fmt.Printf("deleted %s\n", args[2]) },
+					human: func(data any) { fmt.Printf("deleted %s\n", args[2]) },
 				}, nil
 			})
 	},
@@ -374,16 +430,19 @@ func init() {
 
 	directoriesListCmd.Flags().IntVar(&dirOffset, "offset", 0, "result offset")
 	directoriesListCmd.Flags().IntVar(&dirLimit, "limit", 100, "page size")
+	directoriesListCmd.Flags().BoolVar(&dirAll, "all", false, "walk every page")
 	directoriesCreateCmd.Flags().StringVarP(&dirPayloadFile, "file", "f", "", "directory JSON file (- for stdin)")
 	directoriesUpdateCmd.Flags().StringVarP(&dirPayloadFile, "file", "f", "", "directory JSON file (- for stdin)")
 
 	mailinglistsListCmd.Flags().IntVar(&dirOffset, "offset", 0, "result offset")
 	mailinglistsListCmd.Flags().IntVar(&dirLimit, "limit", 100, "page size")
+	mailinglistsListCmd.Flags().BoolVar(&dirAll, "all", false, "walk every page")
 	mailinglistsCreateCmd.Flags().StringVarP(&dirPayloadFile, "file", "f", "", "mailing list JSON file (- for stdin)")
 	mailinglistsUpdateCmd.Flags().StringVarP(&dirPayloadFile, "file", "f", "", "mailing list JSON file (- for stdin)")
 
 	contactsListCmd.Flags().IntVar(&dirOffset, "offset", 0, "result offset")
 	contactsListCmd.Flags().IntVar(&dirLimit, "limit", 100, "page size")
+	contactsListCmd.Flags().BoolVar(&dirAll, "all", false, "walk every page")
 	contactsCreateCmd.Flags().StringVarP(&dirPayloadFile, "file", "f", "", "contact JSON file (- for stdin)")
 	contactsUpdateCmd.Flags().StringVarP(&dirPayloadFile, "file", "f", "", "contact JSON file (- for stdin)")
 }

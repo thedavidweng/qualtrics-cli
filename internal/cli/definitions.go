@@ -82,6 +82,10 @@ var definitionsExportCmd = &cobra.Command{
 				}, writeFile(defExportPath, data)
 			},
 			func(data any) {
+				if fullOutput {
+					printJSON(data)
+					return
+				}
 				m, _ := data.(map[string]any)
 				fmt.Printf("wrote %v bytes to %v\n", m["bytes"], m["path"])
 			})
@@ -112,7 +116,13 @@ var definitionsImportCmd = &cobra.Command{
 					do: func(ctx context.Context, client *qualtrics.Client) (any, error) {
 						return client.CreateFromDefinition(ctx, payload)
 					},
-					human: func() { fmt.Println("survey imported") },
+					human: func(data any) {
+						if fullOutput {
+							printJSON(data)
+							return
+						}
+						fmt.Println("survey imported")
+					},
 				}, nil
 			})
 	},
@@ -133,6 +143,10 @@ var questionsListCmd = &cobra.Command{
 				return client.ListQuestions(ctx, args[0])
 			},
 			func(data any) {
+				if fullOutput {
+					printJSON(data)
+					return
+				}
 				questions, _ := data.([]qualtrics.Question)
 				fmt.Printf("%-12s %-14s %-18s %s\n", "QID", "TYPE", "SELECTOR", "TEXT")
 				for _, q := range questions {
@@ -176,7 +190,13 @@ var questionsCreateCmd = &cobra.Command{
 					do: func(ctx context.Context, client *qualtrics.Client) (any, error) {
 						return client.CreateQuestion(ctx, args[0], defBlockID, payload)
 					},
-					human: func() { fmt.Println("question created") },
+					human: func(data any) {
+						if fullOutput {
+							printJSON(data)
+							return
+						}
+						fmt.Println("question created")
+					},
 				}, nil
 			})
 	},
@@ -199,7 +219,7 @@ var questionsUpdateCmd = &cobra.Command{
 					do: func(ctx context.Context, client *qualtrics.Client) (any, error) {
 						return nil, client.UpdateQuestion(ctx, args[0], args[1], payload)
 					},
-					human: func() { fmt.Printf("updated %s\n", args[1]) },
+					human: func(data any) { fmt.Printf("updated %s\n", args[1]) },
 				}, nil
 			})
 	},
@@ -217,7 +237,7 @@ var questionsDeleteCmd = &cobra.Command{
 					do: func(ctx context.Context, client *qualtrics.Client) (any, error) {
 						return nil, client.DeleteQuestion(ctx, args[0], args[1])
 					},
-					human: func() { fmt.Printf("deleted %s\n", args[1]) },
+					human: func(data any) { fmt.Printf("deleted %s\n", args[1]) },
 				}, nil
 			})
 	},
@@ -242,6 +262,10 @@ var blocksListCmd = &cobra.Command{
 				return def.BlockList(), nil
 			},
 			func(data any) {
+				if fullOutput {
+					printJSON(data)
+					return
+				}
 				blocks, _ := data.([]qualtrics.Block)
 				fmt.Printf("%-20s %-12s %-10s %s\n", "BLOCK", "TYPE", "QUESTIONS", "DESCRIPTION")
 				for _, b := range blocks {
@@ -287,7 +311,13 @@ var blocksCreateCmd = &cobra.Command{
 					do: func(ctx context.Context, client *qualtrics.Client) (any, error) {
 						return client.CreateBlock(ctx, args[0], defDescription)
 					},
-					human: func() { fmt.Println("block created") },
+					human: func(data any) {
+						if fullOutput {
+							printJSON(data)
+							return
+						}
+						fmt.Println("block created")
+					},
 				}, nil
 			})
 	},
@@ -310,7 +340,7 @@ var blocksUpdateCmd = &cobra.Command{
 					do: func(ctx context.Context, client *qualtrics.Client) (any, error) {
 						return nil, client.UpdateBlock(ctx, args[0], args[1], payload)
 					},
-					human: func() { fmt.Printf("updated %s\n", args[1]) },
+					human: func(data any) { fmt.Printf("updated %s\n", args[1]) },
 				}, nil
 			})
 	},
@@ -328,7 +358,7 @@ var blocksDeleteCmd = &cobra.Command{
 					do: func(ctx context.Context, client *qualtrics.Client) (any, error) {
 						return nil, client.DeleteBlock(ctx, args[0], args[1])
 					},
-					human: func() { fmt.Printf("deleted %s\n", args[1]) },
+					human: func(data any) { fmt.Printf("deleted %s\n", args[1]) },
 				}, nil
 			})
 	},
@@ -369,7 +399,7 @@ var flowUpdateCmd = &cobra.Command{
 					do: func(ctx context.Context, client *qualtrics.Client) (any, error) {
 						return nil, client.UpdateFlow(ctx, args[0], payload)
 					},
-					human: func() { fmt.Println("flow updated") },
+					human: func(data any) { fmt.Println("flow updated") },
 				}, nil
 			})
 	},
@@ -410,7 +440,7 @@ var optionsUpdateCmd = &cobra.Command{
 					do: func(ctx context.Context, client *qualtrics.Client) (any, error) {
 						return nil, client.UpdateOptions(ctx, args[0], payload)
 					},
-					human: func() { fmt.Println("options updated") },
+					human: func(data any) { fmt.Println("options updated") },
 				}, nil
 			})
 	},
@@ -447,18 +477,18 @@ ready to import into Qualtrics via Create Project → Import a QSF File.
 No API access required.`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		runLocal("definitions.build", func() any {
+		runLocal("definitions.build", func() (any, *errors.Error) {
 			content, err := os.ReadFile(args[0])
 			if err != nil {
-				return map[string]any{"error": err.Error()}
+				return nil, errors.New(errors.InvalidArguments, err.Error(), errors.CatValidation, false, err)
 			}
 			spec, err := qsf.ParseSurvey(string(content))
 			if err != nil {
-				return map[string]any{"error": err.Error()}
+				return nil, errors.New(errors.InvalidArguments, err.Error(), errors.CatValidation, false, err)
 			}
 			data, err := qsf.BuildQSF(spec)
 			if err != nil {
-				return map[string]any{"error": err.Error()}
+				return nil, errors.New(errors.InvalidArguments, err.Error(), errors.CatValidation, false, err)
 			}
 			outPath := qsfOutputPath
 			if outPath == "" {
@@ -467,10 +497,10 @@ No API access required.`,
 			}
 			jsonBytes, err := json.MarshalIndent(data, "", "  ")
 			if err != nil {
-				return map[string]any{"error": err.Error()}
+				return nil, errors.New(errors.InternalError, err.Error(), errors.CatInternal, false, err)
 			}
 			if err := os.WriteFile(outPath, jsonBytes, 0o600); err != nil {
-				return map[string]any{"error": err.Error()}
+				return nil, errors.New(errors.InternalError, err.Error(), errors.CatInternal, false, err)
 			}
 			totalQ := 0
 			for _, b := range spec.Blocks {
@@ -486,13 +516,13 @@ No API access required.`,
 				"language":  spec.Language,
 				"blocks":    len(spec.Blocks),
 				"questions": totalQ,
-			}
+			}, nil
 		}, func(data any) {
-			m, _ := data.(map[string]any)
-			if errStr, ok := m["error"].(string); ok {
-				fmt.Printf("Error: %s\n", errStr)
-				os.Exit(1)
+			if fullOutput {
+				printJSON(data)
+				return
 			}
+			m, _ := data.(map[string]any)
 			fmt.Printf("Compiled %s\n", m["output"])
 			fmt.Printf("  Title:     %s\n", m["title"])
 			fmt.Printf("  Language:  %s\n", m["language"])
@@ -513,23 +543,22 @@ var qsfSummaryCmd = &cobra.Command{
 	Short: "Display structural summary of a QSF file",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		runLocal("definitions.qsf.summary", func() any {
+		runLocal("definitions.qsf.summary", func() (any, *errors.Error) {
 			data, err := os.ReadFile(args[0])
 			if err != nil {
-				return map[string]any{"error": err.Error()}
+				return nil, errors.New(errors.InvalidArguments, err.Error(), errors.CatValidation, false, err)
 			}
 			summary, err := qsf.SummarizeQSF(data)
 			if err != nil {
-				return map[string]any{"error": err.Error()}
+				return nil, errors.New(errors.InvalidArguments, err.Error(), errors.CatValidation, false, err)
 			}
-			return summary
+			return summary, nil
 		}, func(data any) {
-			s, ok := data.(*qsf.SummaryInfo)
-			if !ok {
-				m, _ := data.(map[string]any)
-				fmt.Printf("Error: %v\n", m["error"])
-				os.Exit(1)
+			if fullOutput {
+				printJSON(data)
+				return
 			}
+			s, _ := data.(*qsf.SummaryInfo)
 			fmt.Printf("survey:    %s (%s)\n", s.SurveyName, s.SurveyID)
 			fmt.Printf("language:  %s\n", s.Language)
 			fmt.Printf("blocks:    %d\n", s.BlockCount)
@@ -547,14 +576,14 @@ var qsfConvertCmd = &cobra.Command{
 	Short: "Convert a QSF file into a survey definition JSON",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		runLocal("definitions.qsf.convert", func() any {
+		runLocal("definitions.qsf.convert", func() (any, *errors.Error) {
 			data, err := os.ReadFile(args[0])
 			if err != nil {
-				return map[string]any{"error": err.Error()}
+				return nil, errors.New(errors.InvalidArguments, err.Error(), errors.CatValidation, false, err)
 			}
 			defBytes, err := qsf.ConvertQSFToDefinition(data)
 			if err != nil {
-				return map[string]any{"error": err.Error()}
+				return nil, errors.New(errors.InvalidArguments, err.Error(), errors.CatValidation, false, err)
 			}
 			outPath := qsfOutputPath
 			if outPath == "" {
@@ -562,18 +591,18 @@ var qsfConvertCmd = &cobra.Command{
 				outPath = base + "_def.json"
 			}
 			if err := os.WriteFile(outPath, defBytes, 0o600); err != nil {
-				return map[string]any{"error": err.Error()}
+				return nil, errors.New(errors.InternalError, err.Error(), errors.CatInternal, false, err)
 			}
 			return map[string]any{
 				"output": outPath,
 				"bytes":  len(defBytes),
-			}
+			}, nil
 		}, func(data any) {
-			m, _ := data.(map[string]any)
-			if errStr, ok := m["error"].(string); ok {
-				fmt.Printf("Error: %s\n", errStr)
-				os.Exit(1)
+			if fullOutput {
+				printJSON(data)
+				return
 			}
+			m, _ := data.(map[string]any)
 			fmt.Printf("Converted %s (%v bytes)\n", m["output"], m["bytes"])
 		})
 	},

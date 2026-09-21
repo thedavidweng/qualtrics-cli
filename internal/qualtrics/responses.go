@@ -34,11 +34,16 @@ type ExportStart struct {
 	ProgressID string `json:"progressId"`
 }
 
-type ExportStatus struct {
-	Status          JobStatus `json:"status"`
-	PercentComplete float64   `json:"percentComplete"`
-	FileID          string    `json:"fileId"`
+type Job struct {
+	ProgressID      string    `json:"progressId,omitempty"`
+	Status          JobStatus `json:"status,omitempty"`
+	PercentComplete float64   `json:"percentComplete,omitempty"`
+	FileID          string    `json:"fileId,omitempty"`
 }
+
+type ExportStatus = Job
+
+type ImportStatus = Job
 
 func (c *Client) StartExport(ctx context.Context, req *ExportRequest) (ExportStart, error) {
 	var out ExportStart
@@ -86,6 +91,9 @@ func (c *Client) Download(ctx context.Context, path string) (data []byte, filena
 				return nil, "", apiErr
 			}
 			lastErr = apiErr
+			if retryAfter == 0 {
+				retryAfter = parseRetryAfterValue(resp.Header.Get("Retry-After"))
+			}
 			if retryAfter > 0 {
 				if err := sleepCtx(ctx, retryAfter); err != nil {
 					return nil, "", err
@@ -115,11 +123,6 @@ func filenameFromDisposition(value string) string {
 
 type ImportStart struct {
 	ProgressID string `json:"progressId"`
-}
-
-type ImportStatus struct {
-	Status          JobStatus `json:"status"`
-	PercentComplete float64   `json:"percentComplete"`
 }
 
 func (c *Client) StartImport(ctx context.Context, surveyID string) (ImportStart, error) {
