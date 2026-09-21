@@ -72,9 +72,9 @@ if [ -z "$install_dir" ]; then
     install_dir="/usr/local/bin"
   else
     install_dir="$HOME/.local/bin"
-    mkdir -p "$install_dir"
   fi
 fi
+mkdir -p "$install_dir"
 
 step "Installing to $install_dir/$BINARY"
 mv "$tmp_dir/$BINARY" "$install_dir/$BINARY"
