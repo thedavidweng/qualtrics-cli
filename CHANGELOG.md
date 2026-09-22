@@ -4,6 +4,13 @@ All notable changes to this project are documented in this file. The format is b
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0](https://github.com/thedavidweng/qualtrics-cli/compare/v0.1.0...v0.2.0) (2026-09-22)
+
+
+### Features
+
+* complete QSF survey builder DSL and align CI workflow ([fc8027c](https://github.com/thedavidweng/qualtrics-cli/commit/fc8027c47b9d3e0d3c1ce4bd2d27b9afa8593425))
+
 ## [Unreleased]
 
 ### Fixed
