@@ -233,6 +233,7 @@ func wrapError(err error, message string) *errors.Error {
 	}
 	return errors.New(errors.APIError, message, errors.CatAPI, false, err)
 }
+
 func handleError(renderer *output.Renderer, command string, err error, start time.Time) {
 	e, ok := err.(*errors.Error)
 	if !ok {

@@ -6,6 +6,7 @@ type SurveySpec struct {
 	Description    string
 	ExtraLanguages []string
 	Blocks         []*BlockSpec
+	Warnings       []string
 }
 
 type BlockSpec struct {
@@ -27,9 +28,13 @@ type QuestionSpec struct {
 	BodyLines          []string
 	SkipLogic          []*SkipRule
 	DisplayLogic       *LogicCondition
+	LikertBase         string
 	RecodeValues       map[int]string
 	VariableNames      map[int]string
 	TextEntryChoices   map[int]bool
+	ExclusiveChoices   map[int]bool
+	MinAnswers         int
+	MaxAnswers         int
 	CarryFrom          string
 	TextTranslations   map[string]string
 	ChoiceTranslations map[string]map[int]string

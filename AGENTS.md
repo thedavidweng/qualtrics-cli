@@ -1,4 +1,4 @@
-# Agent Instructions
+# AGENTS.md
 
 This repository is developed primarily by coding agents. Read this before making changes.
 

@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/icon.png" alt="qualtrics-cli" width="160" />
+</p>
+
 <h1 align="center">qualtrics-cli</h1>
 
 <p align="center">
@@ -110,8 +114,10 @@ qualtrics definitions qsf summary survey.qsf
 Import into Qualtrics: **Create Project → Import a QSF File**.
 
 Question types are `[mc]`, `[mc-multi]`, `[mc-dropdown]`, `[rank]`, `[text]`,
-`[text-essay]`, `[matrix]`, `[matrix-multi]`, and `[description]`; an unknown
-`[type]` falls back to `[text]`.
+`[text-essay]`, `[matrix]`, `[matrix-multi]`, `[likert]`, and `[description]`; an unknown
+`[type]` falls back to `[text]`. See [docs/qsf-spec.md](./docs/qsf-spec.md)
+for the full syntax reference (choices, scales, text entry, logic, labels,
+translations, and build warnings).
 
 ### 2. Online Workflow: API Operations
 

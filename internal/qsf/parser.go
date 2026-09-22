@@ -15,6 +15,8 @@ var (
 	reLoopFrom         = regexp.MustCompile(`(?i)(@\w+|QID\d+)`)
 	reChoiceAnnotation = regexp.MustCompile(`^(.*?)\s*\[([A-Z_][A-Z0-9_]*)(?:=(\d+))?\]\s*$`)
 	reTextEntry        = regexp.MustCompile(`(?i)\s*\[\+text\]\s*`)
+	reExclusive        = regexp.MustCompile(`(?i)\s*\[exclusive\]\s*`)
+	reAnswersCount     = regexp.MustCompile(`(?i)^(min|max)-answers:\s*(\d+)\s*$`)
 	reLangLine         = regexp.MustCompile(`(?i)^lang-([a-z]{2})(?:-(scale))?:\s*(.+)$`)
 	reBlock            = regexp.MustCompile(`^#\s+`)
 )
@@ -78,6 +80,7 @@ func newEmptyQuestion(text, qtype string, required bool) *QuestionSpec {
 		RecodeValues:       make(map[int]string),
 		VariableNames:      make(map[int]string),
 		TextEntryChoices:   make(map[int]bool),
+		ExclusiveChoices:   make(map[int]bool),
 		TextTranslations:   make(map[string]string),
 		ChoiceTranslations: make(map[string]map[int]string),
 		RowTranslations:    make(map[string]map[int]string),
@@ -280,6 +283,16 @@ func ParseSurvey(text string) (*SurveySpec, error) {
 			continue
 		}
 
+		if mCount := reAnswersCount.FindStringSubmatch(stripped); len(mCount) >= 3 {
+			n, _ := strconv.Atoi(mCount[2])
+			if strings.EqualFold(mCount[1], "min") {
+				currentQuestion.MinAnswers = n
+			} else {
+				currentQuestion.MaxAnswers = n
+			}
+			continue
+		}
+
 		mLang := reLangLine.FindStringSubmatch(stripped)
 		if len(mLang) >= 4 {
 			langCode := strings.ToUpper(mLang[1])
@@ -328,6 +341,10 @@ func ParseSurvey(text string) (*SurveySpec, error) {
 			if hasTextEntry {
 				val = strings.TrimSpace(reTextEntry.ReplaceAllString(val, ""))
 			}
+			exclusive := reExclusive.MatchString(val)
+			if exclusive {
+				val = strings.TrimSpace(reExclusive.ReplaceAllString(val, ""))
+			}
 			var varname string
 			var recode string
 			ann := reChoiceAnnotation.FindStringSubmatch(val)
@@ -339,7 +356,7 @@ func ParseSurvey(text string) (*SurveySpec, error) {
 				}
 			}
 
-			if strings.HasPrefix(currentQuestion.Type, "matrix") {
+			if strings.HasPrefix(currentQuestion.Type, "matrix") || currentQuestion.Type == "likert" {
 				currentQuestion.Rows = append(currentQuestion.Rows, val)
 				itemIdx := len(currentQuestion.Rows)
 				lastItem = trackedItem{kind: kindRow, index: itemIdx}
@@ -348,6 +365,9 @@ func ParseSurvey(text string) (*SurveySpec, error) {
 				}
 				if recode != "" {
 					currentQuestion.RecodeValues[itemIdx] = recode
+				}
+				if exclusive {
+					currentQuestion.ExclusiveChoices[itemIdx] = true
 				}
 			} else {
 				currentQuestion.Choices = append(currentQuestion.Choices, val)
@@ -362,6 +382,9 @@ func ParseSurvey(text string) (*SurveySpec, error) {
 				if hasTextEntry {
 					currentQuestion.TextEntryChoices[itemIdx] = true
 				}
+				if exclusive {
+					currentQuestion.ExclusiveChoices[itemIdx] = true
+				}
 			}
 			continue
 		}
@@ -373,5 +396,6 @@ func ParseSurvey(text string) (*SurveySpec, error) {
 	}
 
 	flushBlock()
+	validateSpec(spec)
 	return spec, nil
 }

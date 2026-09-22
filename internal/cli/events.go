@@ -12,9 +12,7 @@ import (
 	"github.com/thedavidweng/qualtrics-cli/internal/safety"
 )
 
-var (
-	eventPayloadFile string
-)
+var eventPayloadFile string
 
 var eventsCmd = &cobra.Command{
 	Use:   "events",

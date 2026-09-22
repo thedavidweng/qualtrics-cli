@@ -204,6 +204,21 @@ func buildLanguageDict(q *QuestionSpec) map[string]any {
 	return result
 }
 
+func buildValidation(q *QuestionSpec, qt string) map[string]any {
+	if qt == "DB" {
+		return map[string]any{"Settings": map[string]any{"Type": "None"}}
+	}
+	force := "OFF"
+	if q.Required {
+		force = "ON"
+	}
+	return map[string]any{"Settings": map[string]any{
+		"ForceResponse":     force,
+		"ForceResponseType": "ON",
+		"Type":              "None",
+	}}
+}
+
 func buildQuestionPayload(q *QuestionSpec, qidNum int, blockDisplayLogic *LogicCondition) map[string]any {
 	qid := fmt.Sprintf("QID%d", qidNum)
 	tag := q.Label
@@ -216,14 +231,11 @@ func buildQuestionPayload(q *QuestionSpec, qidNum int, blockDisplayLogic *LogicC
 		ti = questionTypes["text"]
 	}
 
-	force := "OFF"
-	if q.Required {
-		force = "ON"
-	}
-
 	qText := q.Text
 	if ti.qt == "DB" && len(q.BodyLines) > 0 {
-		qText = joinBody(q.BodyLines)
+		if body := joinBody(q.BodyLines); body != "" {
+			qText = body
+		}
 	}
 
 	qDesc := q.Text
@@ -245,15 +257,10 @@ func buildQuestionPayload(q *QuestionSpec, qidNum int, blockDisplayLogic *LogicC
 		"DataVisibility":      map[string]any{"Private": false, "Hidden": false},
 		"Configuration":       map[string]any{"QuestionDescriptionOption": "UseText"},
 		"QuestionDescription": qDesc,
-		"Validation": map[string]any{
-			"Settings": map[string]any{
-				"ForceResponse": force,
-				"Type":          "None",
-			},
-		},
-		"Language":     langVal,
-		"NextChoiceId": 1,
-		"NextAnswerId": 1,
+		"Validation":          buildValidation(q, ti.qt),
+		"Language":            langVal,
+		"NextChoiceId":        1,
+		"NextAnswerId":        1,
 	}
 
 	if ti.sub != "" {
@@ -280,6 +287,9 @@ func buildQuestionPayload(q *QuestionSpec, qidNum int, blockDisplayLogic *LogicC
 				if q.TextEntryChoices[i+1] {
 					entry["TextEntry"] = "true"
 				}
+				if q.ExclusiveChoices[i+1] {
+					entry["ExclusiveAnswer"] = true
+				}
 				choiceDict[key] = entry
 				choiceOrder[i] = key
 			}
@@ -299,7 +309,11 @@ func buildQuestionPayload(q *QuestionSpec, qidNum int, blockDisplayLogic *LogicC
 		choiceOrder := make([]string, len(q.Rows))
 		for i, r := range q.Rows {
 			key := strconv.Itoa(i + 1)
-			choices[key] = map[string]any{"Display": r}
+			entry := map[string]any{"Display": r, "ExclusiveAnswer": false}
+			if q.ExclusiveChoices[i+1] {
+				entry["ExclusiveAnswer"] = true
+			}
+			choices[key] = entry
 			choiceOrder[i] = key
 		}
 
@@ -373,7 +387,57 @@ type blockData struct {
 	loopFrom    string
 }
 
+func expandLikert(survey *SurveySpec) {
+	for _, block := range survey.Blocks {
+		var expanded []*QuestionSpec
+		for _, q := range block.Questions {
+			if q.IsPageBreak || q.Type != "likert" {
+				expanded = append(expanded, q)
+				continue
+			}
+			for i, row := range q.Rows {
+				nq := newEmptyQuestion(q.Text+" "+row, "mc", q.Required)
+				nq.DisplayLogic = q.DisplayLogic
+				nq.SkipLogic = q.SkipLogic
+				nq.Choices = append([]string{}, q.Scale...)
+				nq.TextTranslations = map[string]string{}
+				nq.ChoiceTranslations = map[string]map[int]string{}
+				nq.RowTranslations = map[string]map[int]string{}
+				nq.ScaleTranslations = map[string][]string{}
+				for lang, t := range q.TextTranslations {
+					nq.TextTranslations[lang] = t
+				}
+				for lang, rows := range q.RowTranslations {
+					if rt, ok := rows[i+1]; ok {
+						stem := q.TextTranslations[lang]
+						if stem == "" {
+							stem = q.Text
+						}
+						nq.TextTranslations[lang] = stem + " " + rt
+					}
+				}
+				for lang, sc := range q.ScaleTranslations {
+					m := make(map[int]string)
+					for j, s := range sc {
+						m[j+1] = s
+					}
+					nq.ChoiceTranslations[lang] = m
+				}
+				if name, ok := q.VariableNames[i+1]; ok {
+					nq.Label = name
+				} else if q.Label != "" {
+					nq.Label = fmt.Sprintf("%s_%d", q.Label, i+1)
+				}
+				nq.LikertBase = q.Label
+				expanded = append(expanded, nq)
+			}
+		}
+		block.Questions = expanded
+	}
+}
+
 func BuildQSF(survey *SurveySpec) (map[string]any, error) {
+	expandLikert(survey)
 	surveyID := randID("SV_")
 	userID := randID("UR_")
 	rsID := randID("RS_")
@@ -429,9 +493,14 @@ func BuildQSF(survey *SurveySpec) (map[string]any, error) {
 	}
 
 	labelToQID := make(map[string]string)
+	seenBase := make(map[string]bool)
 	for _, t := range allTriples {
 		if t.question.Label != "" {
 			labelToQID[t.question.Label] = fmt.Sprintf("QID%d", t.qidNum)
+		}
+		if base := t.question.LikertBase; base != "" && !seenBase[base] {
+			seenBase[base] = true
+			labelToQID[base] = fmt.Sprintf("QID%d", t.qidNum)
 		}
 	}
 
@@ -441,6 +510,7 @@ func BuildQSF(survey *SurveySpec) (map[string]any, error) {
 			if r, ok := labelToQID[label]; ok {
 				return r
 			}
+			survey.Warnings = append(survey.Warnings, "unresolved label @"+label+"; reference left as-is and Qualtrics will not resolve it")
 		}
 		return ref
 	}

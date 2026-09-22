@@ -490,6 +490,9 @@ No API access required.`,
 			if err != nil {
 				return nil, errors.New(errors.InvalidArguments, err.Error(), errors.CatValidation, false, err)
 			}
+			for _, w := range spec.Warnings {
+				_, _ = fmt.Fprintln(os.Stderr, "Warning:", w)
+			}
 			outPath := qsfOutputPath
 			if outPath == "" {
 				base := strings.TrimSuffix(args[0], ".md")
