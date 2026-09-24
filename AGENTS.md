@@ -52,3 +52,10 @@ The brand's token may lack API access (403 `AuthZ_2.0`). The client, envelope, p
 safety, and QSF layers are all tested without live access. Fixtures for survey definitions
 and response exports come from reverse-engineered QSF knowledge (see ADR-0006), not from
 invented shapes. `mise run test-live` runs against the real API when a working token exists.
+
+## Testing rules
+
+- Never write unit tests after code.
+- E2E is the sole testing mechanism by default: verify complex features end-to-end, each run producing a verifiable repeatable artifact.
+- Isolated tests only when E2E cannot reach the failure: first enumerate all failure modes, then write code. No string-match, constant-mirror, or getter tests.
+- Coverage is a side effect, never the goal; never add tests to hit a threshold.
