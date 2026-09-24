@@ -2,7 +2,6 @@ package qsf
 
 import (
 	"encoding/json"
-	"os"
 	"strings"
 	"testing"
 )
@@ -177,38 +176,5 @@ func TestBuildQSF(t *testing.T) {
 	}
 	if len(def.Questions) != 5 {
 		t.Fatalf("def questions = %d, want 5", len(def.Questions))
-	}
-}
-
-func TestExampleFile(t *testing.T) {
-	examplePath := "/tmp/opencode/q_example.md"
-	data, err := os.ReadFile(examplePath)
-	if err != nil {
-		t.Skip("q_example.md not found in /tmp/opencode")
-	}
-
-	spec, err := ParseSurvey(string(data))
-	if err != nil {
-		t.Fatal(err)
-	}
-	qsf, err := BuildQSF(spec)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	qsfBytes, err := json.Marshal(qsf)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	summary, err := SummarizeQSF(qsfBytes)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if summary.SurveyName != "Product Feedback Survey" {
-		t.Fatalf("summary name = %s", summary.SurveyName)
-	}
-	if summary.BlockCount != 2 {
-		t.Fatalf("summary blocks = %d, want 2", summary.BlockCount)
 	}
 }
