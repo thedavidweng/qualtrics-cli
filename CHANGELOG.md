@@ -4,6 +4,13 @@ All notable changes to this project are documented in this file. The format is b
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.2](https://github.com/thedavidweng/qualtrics-cli/compare/v0.2.1...v0.2.2) (2026-10-11)
+
+
+### Documentation
+
+* **agents:** refactor guidance with progressive disclosure ([#12](https://github.com/thedavidweng/qualtrics-cli/issues/12)) ([d3e67de](https://github.com/thedavidweng/qualtrics-cli/commit/d3e67def08660fbb062eda17f852c7b3389b07ed))
+
 ## [0.2.1](https://github.com/thedavidweng/qualtrics-cli/compare/v0.2.0...v0.2.1) (2026-10-09)
 
 
