@@ -4,6 +4,13 @@ All notable changes to this project are documented in this file. The format is b
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.3](https://github.com/thedavidweng/qualtrics-cli/compare/v0.2.2...v0.2.3) (2026-10-26)
+
+
+### Bug Fixes
+
+* **release:** notarize macOS executables and refresh Go tooling ([#22](https://github.com/thedavidweng/qualtrics-cli/issues/22)) ([aaf12a2](https://github.com/thedavidweng/qualtrics-cli/commit/aaf12a2d1005dad0a9f935d3ba93b541ae3b42c3))
+
 ## [0.2.2](https://github.com/thedavidweng/qualtrics-cli/compare/v0.2.1...v0.2.2) (2026-10-11)
 
 
