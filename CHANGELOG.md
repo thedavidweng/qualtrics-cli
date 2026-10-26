@@ -4,6 +4,13 @@ All notable changes to this project are documented in this file. The format is b
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.4](https://github.com/thedavidweng/qualtrics-cli/compare/v0.2.3...v0.2.4) (2026-10-26)
+
+
+### Bug Fixes
+
+* **ci:** select the exact source-built linter binary ([#24](https://github.com/thedavidweng/qualtrics-cli/issues/24)) ([b27c57f](https://github.com/thedavidweng/qualtrics-cli/commit/b27c57fadc7f077f7f7a13dfa2324047fb6e2ccb))
+
 ## [0.2.3](https://github.com/thedavidweng/qualtrics-cli/compare/v0.2.2...v0.2.3) (2026-10-26)
 
 
