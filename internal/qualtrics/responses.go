@@ -64,7 +64,7 @@ func (c *Client) GetExport(ctx context.Context, progressID string) (ExportStatus
 func (c *Client) Download(ctx context.Context, path string) (data []byte, filename string, err error) {
 	attempts := maxRetries + 1
 	var lastErr error
-	for attempt := 0; attempt < attempts; attempt++ {
+	for attempt := range attempts {
 		if attempt > 0 {
 			if err := sleepCtx(ctx, backoff(attempt, nil)); err != nil {
 				return nil, "", err
