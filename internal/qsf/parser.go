@@ -122,7 +122,7 @@ func ParseSurvey(text string) (*SurveySpec, error) {
 	if rawLangs, ok := meta["languages"]; ok {
 		switch v := rawLangs.(type) {
 		case string:
-			for _, part := range strings.Split(v, ",") {
+			for part := range strings.SplitSeq(v, ",") {
 				p := strings.TrimSpace(part)
 				if p != "" {
 					extraLangs = append(extraLangs, strings.ToUpper(p))
@@ -300,7 +300,7 @@ func ParseSurvey(text string) (*SurveySpec, error) {
 			tText := strings.TrimSpace(mLang[3])
 			if isScale {
 				var list []string
-				for _, p := range strings.Split(tText, ",") {
+				for p := range strings.SplitSeq(tText, ",") {
 					ps := strings.TrimSpace(p)
 					if ps != "" {
 						list = append(list, ps)
@@ -313,7 +313,7 @@ func ParseSurvey(text string) (*SurveySpec, error) {
 					currentQuestion.TextTranslations[langCode] = tText
 				case kindScale:
 					var list []string
-					for _, p := range strings.Split(tText, ",") {
+					for p := range strings.SplitSeq(tText, ",") {
 						ps := strings.TrimSpace(p)
 						if ps != "" {
 							list = append(list, ps)

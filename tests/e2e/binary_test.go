@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"slices"
 	"sort"
 	"strings"
 	"sync"
@@ -105,7 +106,7 @@ func discoverCommands(t *testing.T, bin string) []string {
 	}
 
 	seen := make(map[string]bool)
-	for _, line := range strings.Split(stdout, "\n") {
+	for line := range strings.SplitSeq(stdout, "\n") {
 		m := commandNameRe.FindStringSubmatch(line)
 		if len(m) > 1 {
 			cmd := m[1]
@@ -127,13 +128,7 @@ func TestAllCommandsInHelp(t *testing.T) {
 	discovered := discoverCommands(t, bin)
 
 	for _, required := range requiredCommands {
-		found := false
-		for _, d := range discovered {
-			if d == required {
-				found = true
-				break
-			}
-		}
+		found := slices.Contains(discovered, required)
 		if !found {
 			t.Errorf("required command %q not found in help: %v", required, discovered)
 		}

@@ -230,17 +230,11 @@ func parseRetryAfterValue(v string) time.Duration {
 		return 0
 	}
 	if secs, err := strconv.Atoi(v); err == nil && secs > 0 {
-		d := time.Duration(secs) * time.Second
-		if d > maxRetryWait {
-			d = maxRetryWait
-		}
+		d := min(time.Duration(secs)*time.Second, maxRetryWait)
 		return d
 	}
 	if t, err := http.ParseTime(v); err == nil {
-		d := time.Until(t)
-		if d > maxRetryWait {
-			d = maxRetryWait
-		}
+		d := min(time.Until(t), maxRetryWait)
 		if d < 0 {
 			return 0
 		}

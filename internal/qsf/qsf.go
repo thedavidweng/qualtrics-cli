@@ -2,6 +2,7 @@ package qsf
 
 import (
 	"fmt"
+	"maps"
 	"math/rand/v2"
 	"sort"
 	"strconv"
@@ -404,9 +405,7 @@ func expandLikert(survey *SurveySpec) {
 				nq.ChoiceTranslations = map[string]map[int]string{}
 				nq.RowTranslations = map[string]map[int]string{}
 				nq.ScaleTranslations = map[string][]string{}
-				for lang, t := range q.TextTranslations {
-					nq.TextTranslations[lang] = t
-				}
+				maps.Copy(nq.TextTranslations, q.TextTranslations)
 				for lang, rows := range q.RowTranslations {
 					if rt, ok := rows[i+1]; ok {
 						stem := q.TextTranslations[lang]
