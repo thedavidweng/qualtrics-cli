@@ -13,18 +13,13 @@ concurrency:
 
 jobs:
   release-please:
-    permissions:
-      contents: write
-      pull-requests: write
-    timeout-minutes: 60
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
-          token: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
-
-      - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
-        id: rp
-        with:
-          token: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
+    name: Release Please
+    # Token, action pins and outputs live in the shared workflow; it mints a
+    # thedavidweng-release GitHub App token, so release PRs and tags start
+    # other workflows (PR checks, tag-push releases) like any other push.
+    permissions: {}
+    uses: thedavidweng/.github/.github/workflows/release-please.yml@main
+    with:
+      app-id: ${{ vars.RELEASE_APP_ID }}
+    secrets:
+      app-private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
